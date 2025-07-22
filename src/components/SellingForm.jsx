@@ -26,6 +26,7 @@ import {
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import LoginModal from "./LoginModal";
+import SignupModal from "./SignupModal";
 
 const SellingForm = ({ open, onClose }) => {
   const { t } = useTranslation();
@@ -45,6 +46,7 @@ const SellingForm = ({ open, onClose }) => {
   const [errors, setErrors] = useState({});
   const [imageFiles, setImageFiles] = useState([]);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
+  const [signupModalOpen, setSignupModalOpen] = useState(false);
 
   // Yemeni governorates
   const governorates = [
@@ -219,6 +221,17 @@ const SellingForm = ({ open, onClose }) => {
     });
     setErrors({});
     setImageFiles([]);
+  };
+
+  const handleSignupSuccess = () => {
+    // After successful signup, open login modal
+    setSignupModalOpen(false);
+    setLoginModalOpen(true);
+  };
+
+  const handleOpenSignup = () => {
+    setLoginModalOpen(false);
+    setSignupModalOpen(true);
   };
 
   const handleClose = () => {
@@ -593,6 +606,14 @@ const SellingForm = ({ open, onClose }) => {
         open={loginModalOpen}
         onClose={() => setLoginModalOpen(false)}
         onSuccess={handleLoginSuccess}
+        onOpenSignup={handleOpenSignup}
+      />
+
+      {/* Signup Modal */}
+      <SignupModal
+        open={signupModalOpen}
+        onClose={() => setSignupModalOpen(false)}
+        onSuccess={handleSignupSuccess}
       />
     </>
   );

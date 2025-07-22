@@ -10,12 +10,11 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Link,
 } from "@mui/material";
-import { Close, Phone, Lock } from "@mui/icons-material";
+import { Close, Phone, Lock, PersonAdd } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
-const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
+const SignupModal = ({ open, onClose, onSuccess }) => {
   const { t } = useTranslation();
   const [step, setStep] = useState("phone"); // "phone", "otp", "success"
   const [phoneNumber, setPhoneNumber] = useState("");
@@ -26,20 +25,20 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
     if (!phoneNumber || phoneNumber.length < 8) {
-      setError(t("login.invalidPhone"));
+      setError(t("register.invalidPhone"));
       return;
     }
 
     setLoading(true);
     setError("");
 
-    // Simulate API call to send OTP
+    // Simulate API call to register user and send OTP
     try {
       await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API delay
       setStep("otp");
       setLoading(false);
     } catch (err) {
-      setError(t("login.sendOtpError"));
+      setError(t("register.sendOtpError"));
       setLoading(false);
     }
   };
@@ -47,7 +46,7 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     if (!otp || otp.length !== 4) {
-      setError(t("login.invalidOtp"));
+      setError(t("register.invalidOtp"));
       return;
     }
 
@@ -69,11 +68,11 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
           handleClose();
         }, 3000);
       } else {
-        setError(t("login.invalidOtp"));
+        setError(t("register.invalidOtp"));
         setLoading(false);
       }
     } catch (err) {
-      setError(t("login.verifyOtpError"));
+      setError(t("register.verifyOtpError"));
       setLoading(false);
     }
   };
@@ -87,11 +86,6 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
     onClose();
   };
 
-  const handleRegisterClick = () => {
-    onClose(); // Close login modal
-    onOpenSignup(); // Open signup modal
-  };
-
   const renderPhoneStep = () => (
     <>
       <DialogTitle
@@ -102,7 +96,7 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-          {t("login.enterPhone")}
+          {t("register.createAccount")}
         </Typography>
         <Button onClick={handleClose} sx={{ minWidth: "auto", p: 0 }}>
           <Close />
@@ -111,7 +105,7 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
       <form onSubmit={handlePhoneSubmit}>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            {t("login.phoneDescription")}
+            {t("register.phoneDescription")}
           </Typography>
 
           {error && (
@@ -122,40 +116,22 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
 
           <TextField
             fullWidth
-            label={t("login.phoneNumber")}
+            label={t("register.phoneNumber")}
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder={t("login.phonePlaceholder")}
+            placeholder={t("register.phonePlaceholder")}
             type="tel"
             InputProps={{
-              startAdornment: <Phone sx={{ mr: 1, color: "text.secondary" }} />,
+              startAdornment: (
+                <PersonAdd sx={{ mr: 1, color: "text.secondary" }} />
+              ),
             }}
             sx={{ mb: 2 }}
           />
-
-          <Box sx={{ textAlign: "center", mt: 3 }}>
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {t("login.noAccount")}
-            </Typography>
-            <Link
-              component="button"
-              variant="body2"
-              onClick={handleRegisterClick}
-              sx={{
-                color: "#2e7d32",
-                textDecoration: "none",
-                "&:hover": {
-                  textDecoration: "underline",
-                },
-              }}
-            >
-              {t("login.registerHere")}
-            </Link>
-          </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
           <Button onClick={handleClose} variant="outlined">
-            {t("login.cancel")}
+            {t("register.cancel")}
           </Button>
           <Button
             type="submit"
@@ -167,7 +143,7 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
               "&:hover": { backgroundColor: "#1b5e20" },
             }}
           >
-            {loading ? t("login.sending") : t("login.sendOtp")}
+            {loading ? t("register.sending") : t("register.sendOtp")}
           </Button>
         </DialogActions>
       </form>
@@ -184,7 +160,7 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-          {t("login.enterOtp")}
+          {t("register.enterOtp")}
         </Typography>
         <Button onClick={handleClose} sx={{ minWidth: "auto", p: 0 }}>
           <Close />
@@ -193,7 +169,7 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
       <form onSubmit={handleOtpSubmit}>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            {t("login.otpDescription", { phone: phoneNumber })}
+            {t("register.otpDescription", { phone: phoneNumber })}
           </Typography>
 
           {error && (
@@ -204,7 +180,7 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
 
           <TextField
             fullWidth
-            label={t("login.otp")}
+            label={t("register.otp")}
             value={otp}
             onChange={(e) =>
               setOtp(e.target.value.replace(/\D/g, "").slice(0, 4))
@@ -231,13 +207,13 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
               onClick={() => setStep("phone")}
               sx={{ color: "text.secondary" }}
             >
-              {t("login.changePhone")}
+              {t("register.changePhone")}
             </Button>
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
           <Button onClick={handleClose} variant="outlined">
-            {t("login.cancel")}
+            {t("register.cancel")}
           </Button>
           <Button
             type="submit"
@@ -249,7 +225,7 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
               "&:hover": { backgroundColor: "#1b5e20" },
             }}
           >
-            {loading ? t("login.verifying") : t("login.verifyOtp")}
+            {loading ? t("register.verifying") : t("register.verifyOtp")}
           </Button>
         </DialogActions>
       </form>
@@ -266,7 +242,7 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2e7d32" }}>
-          {t("login.success")}
+          {t("register.success")}
         </Typography>
         <Button onClick={handleClose} sx={{ minWidth: "auto", p: 0 }}>
           <Close />
@@ -275,13 +251,13 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
       <DialogContent>
         <Box sx={{ textAlign: "center", py: 2 }}>
           <Typography variant="h4" sx={{ color: "#2e7d32", mb: 2 }}>
-            ✅
+            🎉
           </Typography>
           <Typography variant="h6" sx={{ mb: 2 }}>
-            {t("login.productListed")}
+            {t("register.accountCreated")}
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            {t("login.successDescription")}
+            {t("register.successDescription")}
           </Typography>
         </Box>
       </DialogContent>
@@ -295,7 +271,7 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
             "&:hover": { backgroundColor: "#1b5e20" },
           }}
         >
-          {t("login.continue")}
+          {t("register.continue")}
         </Button>
       </DialogActions>
     </>
@@ -320,4 +296,4 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
   );
 };
 
-export default LoginModal;
+export default SignupModal;
