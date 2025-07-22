@@ -51,7 +51,11 @@ export default function SolarCalculator() {
     setAppliances(updated);
   };
 
-  const canCalculate = appliances.some((a) => a.quantity > 0 && a.hours > 0);
+  // Add a helper to check for invalid hours
+  const hasInvalidHours = appliances.some((a) => a.hours > 24);
+
+  const canCalculate =
+    appliances.some((a) => a.quantity > 0 && a.hours > 0) && !hasInvalidHours;
 
   const handleCalculate = (e) => {
     e.preventDefault();
@@ -158,8 +162,13 @@ export default function SolarCalculator() {
                         }
                         variant="outlined"
                         size="small"
+                        error={appliance.hours > 24}
+                        helperText={
+                          appliance.hours > 24 ? t("calculator.hoursMax24") : ""
+                        }
                         inputProps={{
                           min: 0,
+                          max: 24,
                           style: { width: 60, textAlign: "center" },
                         }}
                       />
