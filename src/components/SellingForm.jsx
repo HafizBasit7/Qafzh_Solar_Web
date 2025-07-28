@@ -17,6 +17,7 @@ import {
   IconButton,
   InputAdornment,
   Alert,
+  Switch, // Added Switch import
 } from "@mui/material";
 import {
   Close,
@@ -31,16 +32,29 @@ import SignupModal from "./SignupModal";
 const SellingForm = ({ open, onClose }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState({
+    name: '', // Added product name field
     productType: "",
     productCondition: "",
     brand: "",
+    model: "",
     price: "",
     currency: "YER",
     phoneNumber: "",
+    whatsappPhone: "",
     governorate: "",
     city: "",
+    locationText: "",
     description: "",
     images: [],
+    specifications: {
+      power: "",
+      voltage: "",
+      warranty: ""
+    },
+    isNegotiable: true,
+    isActive: true,
+    featured: false,
+    status: 'pending' // Added status field
   });
 
   const [errors, setErrors] = useState({});
@@ -164,6 +178,9 @@ const SellingForm = ({ open, onClose }) => {
   const validateForm = () => {
     const newErrors = {};
 
+    if (!formData.name) {
+      newErrors.name = "Product name is required";
+    }
     if (!formData.productType) {
       newErrors.productType = "Product type is required";
     }
@@ -180,6 +197,9 @@ const SellingForm = ({ open, onClose }) => {
       newErrors.phoneNumber = "Phone number is required";
     } else if (!/^[0-9+\-\s()]{8,}$/.test(formData.phoneNumber)) {
       newErrors.phoneNumber = "Please enter a valid phone number";
+    }
+    if (formData.whatsappPhone && !/^[0-9+\-\s()]{8,}$/.test(formData.whatsappPhone)) {
+      newErrors.whatsappPhone = "Please enter a valid WhatsApp number";
     }
     if (!formData.governorate) {
       newErrors.governorate = "Governorate is required";
@@ -208,16 +228,29 @@ const SellingForm = ({ open, onClose }) => {
   const handleLoginSuccess = () => {
     // Reset form data after successful login and product listing
     setFormData({
+      name: '',
       productType: "",
       productCondition: "",
       brand: "",
-      price: "",
+      model: "",
+      price: "",  
       currency: "YER",
       phoneNumber: "",
+      whatsappPhone: "",
       governorate: "",
       city: "",
+      locationText: "",
       description: "",
       images: [],
+      specifications: {
+        power: "",
+        voltage: "",
+        warranty: ""
+      },
+      isNegotiable: true,
+      isActive: true,
+      featured: false,
+      status: 'pending' 
     });
     setErrors({});
     setImageFiles([]);
@@ -236,16 +269,29 @@ const SellingForm = ({ open, onClose }) => {
 
   const handleClose = () => {
     setFormData({
+      name: '', // Added product name field
       productType: "",
       productCondition: "",
       brand: "",
+      model: "",
       price: "",
       currency: "YER",
       phoneNumber: "",
+      whatsappPhone: "",
       governorate: "",
       city: "",
+      locationText: "",
       description: "",
       images: [],
+      specifications: {
+        power: "",
+        voltage: "",
+        warranty: ""
+      },
+      isNegotiable: true,
+      isActive: true,
+      featured: false,
+      status: 'pending' 
     });
     setErrors({});
     setImageFiles([]);
@@ -286,6 +332,20 @@ const SellingForm = ({ open, onClose }) => {
         <form onSubmit={handleSubmit}>
           <DialogContent sx={{ pt: 3 }}>
             <Grid container spacing={3}>
+              {/* Product Name (New) */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  required
+                  label={t("selling.name")}
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  error={!!errors.name}
+                  helperText={errors.name}
+                  placeholder={t("selling.namePlaceholder")}
+                />
+              </Grid>
+
               {/* Product Type */}
               <Grid item xs={12} md={6}>
                 <FormControl
@@ -371,6 +431,17 @@ const SellingForm = ({ open, onClose }) => {
                 </FormControl>
               </Grid>
 
+              {/* Model (New) */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label={t("selling.model")}
+                  value={formData.model}
+                  onChange={(e) => handleInputChange("model", e.target.value)}
+                  placeholder={t("selling.modelPlaceholder")}
+                />
+              </Grid>
+
               {/* Price and Currency */}
               <Grid item xs={12} md={6}>
                 <Box sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
@@ -409,6 +480,19 @@ const SellingForm = ({ open, onClose }) => {
                     </Select>
                   </FormControl>
                 </Box>
+              </Grid>
+
+              {/* WhatsApp Phone (New) */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label={t("selling.whatsapp")}
+                  value={formData.whatsappPhone}
+                  onChange={(e) => handleInputChange("whatsappPhone", e.target.value)}
+                  error={!!errors.whatsappPhone}
+                  helperText={errors.whatsappPhone}
+                  placeholder={t("selling.whatsappPlaceholder")}
+                />
               </Grid>
 
               {/* Phone Number */}
@@ -464,6 +548,74 @@ const SellingForm = ({ open, onClose }) => {
                   onChange={(e) => handleInputChange("city", e.target.value)}
                   placeholder={t("selling.enterCity")}
                 />
+              </Grid>
+
+              {/* Location Text (New) */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label={t("selling.locationText")}
+                  value={formData.locationText}
+                  onChange={(e) => handleInputChange("locationText", e.target.value)}
+                  placeholder={t("selling.locationPlaceholder")}
+                />
+              </Grid>
+
+              {/* Specifications Section */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
+                  {t("selling.specifications")}
+                </Typography>
+                <Grid container spacing={2}>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      fullWidth
+                      label={t("selling.power")}
+                      value={formData.specifications.power}
+                      onChange={(e) => handleInputChange("specifications", {
+                        ...formData.specifications,
+                        power: e.target.value
+                      })}
+                      placeholder="550W"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={3}>
+                    <TextField
+                      fullWidth
+                      label={t("selling.voltage")}
+                      value={formData.specifications.voltage}
+                      onChange={(e) => handleInputChange("specifications", {
+                        ...formData.specifications,
+                        voltage: e.target.value
+                      })}
+                      placeholder="41V"
+                    />
+                  </Grid>
+                  <Grid item xs={12} md={4}>
+                    <TextField
+                      fullWidth
+                      label={t("selling.warranty")}
+                      value={formData.specifications.warranty}
+                      onChange={(e) => handleInputChange("specifications", {
+                        ...formData.specifications,
+                        warranty: e.target.value
+                      })}
+                      placeholder="12 Years"
+                    />
+                  </Grid>
+                </Grid>
+              </Grid>
+
+              {/* Negotiable Toggle (New) */}
+              <Grid item xs={12}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Typography>{t("selling.negotiable")}</Typography>
+                  <Switch
+                    checked={formData.isNegotiable}
+                    onChange={(e) => handleInputChange("isNegotiable", e.target.checked)}
+                    color="primary"
+                  />
+                </Box>
               </Grid>
 
               {/* Description */}

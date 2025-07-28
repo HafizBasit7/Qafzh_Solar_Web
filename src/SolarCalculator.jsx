@@ -5,14 +5,18 @@ import {
   TextField,
   Button,
   Paper,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
+  Modal,
+  IconButton,
 } from "@mui/material";
-import { green } from "@mui/material/colors";
+import {
+  Calculate as CalculateIcon,
+  SolarPower as SolarPowerIcon,
+  FlashOn as FlashOnIcon,
+  Speed as SpeedIcon,
+  GridOn as GridOnIcon,
+  BatteryChargingFull as BatteryIcon,
+  Power as PowerIcon,
+} from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 
 const defaultAppliances = [
@@ -43,19 +47,28 @@ export default function SolarCalculator() {
     }))
   );
   const [results, setResults] = useState(null);
+  const [showResultsModal, setShowResultsModal] = useState(false);
 
   const handleChange = (idx, field, value) => {
+    let numericValue = Number(value) || 0;
+
+    // Validate hours to not exceed 24
+    if (field === "hours" && numericValue > 24) {
+      numericValue = 24;
+    }
+
+    // Validate quantity and watt to not be negative
+    if ((field === "quantity" || field === "watt") && numericValue < 0) {
+      numericValue = 0;
+    }
+
     const updated = appliances.map((a, i) =>
-      i === idx ? { ...a, [field]: value } : a
+      i === idx ? { ...a, [field]: numericValue } : a
     );
     setAppliances(updated);
   };
 
-  // Add a helper to check for invalid hours
-  const hasInvalidHours = appliances.some((a) => a.hours > 24);
-
-  const canCalculate =
-    appliances.some((a) => a.quantity > 0 && a.hours > 0) && !hasInvalidHours;
+  const canCalculate = appliances.some((a) => a.quantity > 0 && a.hours > 0);
 
   const handleCalculate = (e) => {
     e.preventDefault();
@@ -82,150 +95,341 @@ export default function SolarCalculator() {
       batteryAh,
       inverterWatt,
     });
+    setShowResultsModal(true);
   };
 
   return (
-    <Box sx={{ maxWidth: 700, mx: "auto", mt: 4 }}>
+    <Box sx={{ maxWidth: 800, mx: "auto", p: 2, bgcolor: "#F8FAFC", minHeight: "100vh" }}>
       <Paper
-        elevation={3}
-        sx={{ p: 4, background: green[50], borderRadius: 3 }}
+        elevation={1}
+        sx={{
+          p: 3,
+          borderRadius: 4,
+          border: "1px solid #F1F5F9",
+          bgcolor: "#FFFFFF",
+        }}
       >
-        <Typography
-          variant="h4"
-          mb={3}
-          color={green[800]}
-          fontWeight={700}
-          align="center"
-        >
-          {t("calculator.title")}
-        </Typography>
-        <form onSubmit={handleCalculate}>
-          <TableContainer>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>
-                    <b>{t("calculator.appliance")}</b>
-                  </TableCell>
-                  <TableCell align="center">
-                    <b>{t("calculator.quantity")}</b>
-                  </TableCell>
-                  <TableCell align="center">
-                    <b>{t("calculator.watt")}</b>
-                  </TableCell>
-                  <TableCell align="center">
-                    <b>{t("calculator.hoursPerDay")}</b>
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {appliances.map((appliance, idx) => (
-                  <TableRow key={appliance.key}>
-                    <TableCell>{t(appliance.name)}</TableCell>
-                    <TableCell align="center">
-                      <TextField
-                        type="number"
-                        value={appliance.quantity}
-                        onChange={(e) =>
-                          handleChange(idx, "quantity", Number(e.target.value))
-                        }
-                        variant="outlined"
-                        size="small"
-                        inputProps={{
-                          min: 0,
-                          style: { width: 60, textAlign: "center" },
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <TextField
-                        type="number"
-                        value={appliance.watt}
-                        onChange={(e) =>
-                          handleChange(idx, "watt", Number(e.target.value))
-                        }
-                        variant="outlined"
-                        size="small"
-                        inputProps={{
-                          min: 0,
-                          style: { width: 80, textAlign: "center" },
-                          readOnly: appliance.key !== "other",
-                        }}
-                      />
-                    </TableCell>
-                    <TableCell align="center">
-                      <TextField
-                        type="number"
-                        value={appliance.hours}
-                        onChange={(e) =>
-                          handleChange(idx, "hours", Number(e.target.value))
-                        }
-                        variant="outlined"
-                        size="small"
-                        error={appliance.hours > 24}
-                        helperText={
-                          appliance.hours > 24 ? t("calculator.hoursMax24") : ""
-                        }
-                        inputProps={{
-                          min: 0,
-                          max: 24,
-                          style: { width: 60, textAlign: "center" },
-                        }}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-          <Box mt={4} textAlign="center">
-            <Button
-              type="submit"
-              variant="contained"
-              sx={{ background: green[600], color: "#fff", fontWeight: 600 }}
-              disabled={!canCalculate}
-            >
-              {t("calculator.calculate")}
-            </Button>
+        {/* Calculator Header */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
+          <CalculateIcon sx={{ color: "#16A34A" }} />
+          <Typography
+            variant="h5"
+            sx={{
+              fontWeight: 700,
+              color: "#1F2937",
+            }}
+          >
+            {t("calculator.title")}
+          </Typography>
+        </Box>
+
+        {/* Appliances Table */}
+        <Box component="form" onSubmit={handleCalculate}>
+          <Box
+            sx={{
+              bgcolor: "#F9FAFB",
+              borderRadius: 2,
+              p: 1.5,
+              mb: 1,
+              display: "grid",
+              gridTemplateColumns: "2fr 1fr 1fr 1fr",
+              gap: 1,
+            }}
+          >
+            <Typography sx={{ color: "#374151", fontWeight: 600, textAlign: "center" }}>
+              {t("calculator.appliance")}
+            </Typography>
+            <Typography sx={{ color: "#374151", fontWeight: 600, textAlign: "center" }}>
+              {t("calculator.quantity")}
+            </Typography>
+            <Typography sx={{ color: "#374151", fontWeight: 600, textAlign: "center" }}>
+              {t("calculator.watt")}
+            </Typography>
+            <Typography sx={{ color: "#374151", fontWeight: 600, textAlign: "center" }}>
+              {t("calculator.hoursPerDay")}
+            </Typography>
           </Box>
-        </form>
-        <Box
-          mt={4}
-          minHeight={40}
-          textAlign="center"
-          color={green[800]}
-          fontSize={18}
-        >
-          {results && (
-            <Box>
-              <Typography variant="h6" color={green[900]} mb={2}>
-                {t("calculator.results")}
-              </Typography>
-              <Typography>
-                {t("calculator.totalDailyEnergy")}:{" "}
-                <b>{results.totalDailyWh} Wh</b>
-              </Typography>
-              <Typography>
-                {t("calculator.peakLoad")}: <b>{results.peakLoad} W</b>
-              </Typography>
-              <Typography>
-                {t("calculator.solarPanels")}:{" "}
-                <b>
-                  {results.numPanels} x {results.panelWatt}W
-                </b>{" "}
-                ({t("calculator.total")}: {results.requiredPanelWatt}W)
-              </Typography>
-              <Typography>
-                {t("calculator.batterySize")}: <b>{results.batteryAh} Ah</b>{" "}
-                {t("calculator.batteryDetails")}
-              </Typography>
-              <Typography>
-                {t("calculator.inverterSize")}: <b>{results.inverterWatt} W</b>
-              </Typography>
+
+          {appliances.map((appliance, idx) => (
+            <Box
+              key={appliance.key}
+              sx={{
+                display: "grid",
+                gridTemplateColumns: "2fr 1fr 1fr 1fr",
+                gap: 1,
+                p: 1.5,
+                borderBottom: "1px solid #F3F4F6",
+                alignItems: "center",
+              }}
+            >
+              <Typography sx={{ color: "#1F2937" }}>{t(appliance.name)}</Typography>
+              <TextField
+                type="number"
+                value={appliance.quantity}
+                onChange={(e) => handleChange(idx, "quantity", e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    bgcolor: "#FFFFFF",
+                  },
+                }}
+                inputProps={{
+                  min: 0,
+                  style: { textAlign: "center" },
+                }}
+              />
+              <TextField
+                type="number"
+                value={appliance.watt}
+                onChange={(e) => handleChange(idx, "watt", e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    bgcolor: "#FFFFFF",
+                  },
+                }}
+                inputProps={{
+                  min: 0,
+                  style: { textAlign: "center" },
+                  readOnly: appliance.key !== "other",
+                }}
+              />
+              <TextField
+                type="number"
+                value={appliance.hours}
+                onChange={(e) => handleChange(idx, "hours", e.target.value)}
+                variant="outlined"
+                size="small"
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                    bgcolor: "#FFFFFF",
+                  },
+                }}
+                inputProps={{
+                  min: 0,
+                  max: 24,
+                  style: { textAlign: "center" },
+                }}
+              />
             </Box>
-          )}
+          ))}
+
+          {/* Calculate Button */}
+          <Button
+            type="submit"
+            variant="contained"
+            disabled={!canCalculate}
+            startIcon={<CalculateIcon />}
+            sx={{
+              mt: 3,
+              bgcolor: "#16A34A",
+              "&:hover": { bgcolor: "#15803D" },
+              "&.Mui-disabled": { bgcolor: "#9CA3AF" },
+              borderRadius: 3,
+              py: 1.5,
+              px: 3,
+              boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              width: "100%",
+            }}
+          >
+            {t("calculator.calculate")}
+          </Button>
         </Box>
       </Paper>
+
+      {/* Results Modal */}
+      <Modal
+        open={showResultsModal}
+        onClose={() => setShowResultsModal(false)}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: 2.5,
+        }}
+      >
+        <Paper
+          sx={{
+            maxWidth: 500,
+            width: "100%",
+            maxHeight: "80vh",
+            borderRadius: 4,
+            overflow: "hidden",
+            outline: "none",
+          }}
+        >
+          {/* Modal Header */}
+          <Box
+            sx={{
+              p: 2.5,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 1.5,
+              borderBottom: "1px solid #F3F4F6",
+            }}
+          >
+            <SolarPowerIcon sx={{ color: "#16A34A", fontSize: 28 }} />
+            <Typography
+              variant="h5"
+              sx={{ color: "#1F2937", fontWeight: 700 }}
+            >
+              {t("calculator.results")}
+            </Typography>
+          </Box>
+
+          {/* Results Content */}
+          <Box sx={{ p: 2.5 }}>
+            {results && (
+              <>
+                {/* Daily Energy */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    mb: 1.5,
+                    bgcolor: "#F9FAFB",
+                    borderRadius: 3,
+                    display: "flex",
+                    gap: 1.5,
+                  }}
+                >
+                  <FlashOnIcon sx={{ color: "#16A34A" }} />
+                  <Box>
+                    <Typography sx={{ color: "#6B7280", mb: 0.5 }}>
+                      {t("calculator.totalDailyEnergy")}
+                    </Typography>
+                    <Typography sx={{ color: "#1F2937", fontWeight: 700 }}>
+                      {results.totalDailyWh} Wh
+                    </Typography>
+                  </Box>
+                </Paper>
+
+                {/* Peak Load */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    mb: 1.5,
+                    bgcolor: "#F9FAFB",
+                    borderRadius: 3,
+                    display: "flex",
+                    gap: 1.5,
+                  }}
+                >
+                  <SpeedIcon sx={{ color: "#16A34A" }} />
+                  <Box>
+                    <Typography sx={{ color: "#6B7280", mb: 0.5 }}>
+                      {t("calculator.peakLoad")}
+                    </Typography>
+                    <Typography sx={{ color: "#1F2937", fontWeight: 700 }}>
+                      {results.peakLoad} W
+                    </Typography>
+                  </Box>
+                </Paper>
+
+                {/* Solar Panels */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    mb: 1.5,
+                    bgcolor: "#F9FAFB",
+                    borderRadius: 3,
+                    display: "flex",
+                    gap: 1.5,
+                  }}
+                >
+                  <GridOnIcon sx={{ color: "#16A34A" }} />
+                  <Box>
+                    <Typography sx={{ color: "#6B7280", mb: 0.5 }}>
+                      {t("calculator.solarPanels")}
+                    </Typography>
+                    <Typography sx={{ color: "#1F2937", fontWeight: 700 }}>
+                      {results.numPanels} x {results.panelWatt}W
+                    </Typography>
+                    <Typography sx={{ color: "#9CA3AF", fontSize: "0.875rem" }}>
+                      {t("calculator.total")}: {results.requiredPanelWatt}W
+                    </Typography>
+                  </Box>
+                </Paper>
+
+                {/* Battery */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    mb: 1.5,
+                    bgcolor: "#F9FAFB",
+                    borderRadius: 3,
+                    display: "flex",
+                    gap: 1.5,
+                  }}
+                >
+                  <BatteryIcon sx={{ color: "#16A34A" }} />
+                  <Box>
+                    <Typography sx={{ color: "#6B7280", mb: 0.5 }}>
+                      {t("calculator.batterySize")}
+                    </Typography>
+                    <Typography sx={{ color: "#1F2937", fontWeight: 700 }}>
+                      {results.batteryAh} Ah
+                    </Typography>
+                    <Typography sx={{ color: "#9CA3AF", fontSize: "0.875rem" }}>
+                      {t("calculator.batteryDetails")}
+                    </Typography>
+                  </Box>
+                </Paper>
+
+                {/* Inverter */}
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    mb: 1.5,
+                    bgcolor: "#F9FAFB",
+                    borderRadius: 3,
+                    display: "flex",
+                    gap: 1.5,
+                  }}
+                >
+                  <PowerIcon sx={{ color: "#16A34A" }} />
+                  <Box>
+                    <Typography sx={{ color: "#6B7280", mb: 0.5 }}>
+                      {t("calculator.inverterSize")}
+                    </Typography>
+                    <Typography sx={{ color: "#1F2937", fontWeight: 700 }}>
+                      {results.inverterWatt} W
+                    </Typography>
+                  </Box>
+                </Paper>
+              </>
+            )}
+          </Box>
+
+          {/* Modal Footer */}
+          <Box sx={{ p: 2.5 }}>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={() => setShowResultsModal(false)}
+              sx={{
+                bgcolor: "#16A34A",
+                "&:hover": { bgcolor: "#15803D" },
+                borderRadius: 3,
+                py: 1.5,
+                boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+              }}
+            >
+              {t("calculator.ok")}
+            </Button>
+          </Box>
+        </Paper>
+      </Modal>
     </Box>
   );
 }

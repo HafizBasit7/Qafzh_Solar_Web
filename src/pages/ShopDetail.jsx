@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -17,6 +17,11 @@ import {
   ListItemText,
   ListItemIcon,
   Divider,
+  IconButton,
+  Modal,
+  Stack,
+  ImageList,
+  ImageListItem,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -28,23 +33,36 @@ import {
   CheckCircle,
   AccessTime,
   WhatsApp,
+  Business,
+  Language,
+  Notes,
+  Schedule,
+  VerifiedUser,
+  Close as CloseIcon,
+  Facebook,
+  Instagram,
+  Twitter,
 } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
 
 const ShopDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { t } = useTranslation();
+  const [selectedImage, setSelectedImage] = useState(null);
 
   // Sample shop data (in real app, this would come from API)
   const shop = {
     id: parseInt(id),
     name: "محل الطاقة الشمسية المتقدم",
-    location: "صنعاء",
+    logoUrl: "https://picsum.photos/id/1011/400/250",
+    isVerified: true,
+    city: "صنعاء",
+    governorate: "صنعاء",
     phone: "+967 777 123 456",
     email: "shop@example.com",
     address: "شارع الزبيري، صنعاء، اليمن",
-    image: "https://picsum.photos/id/1011/600/400",
-    description:
-      "محل متخصص في بيع وتركيب الأنظمة الشمسية مع فريق فني محترف. نقدم خدمات شاملة في مجال الطاقة الشمسية منذ عام 2018.",
+    description: "محل متخصص في بيع وتركيب الأنظمة الشمسية مع فريق فني محترف. نقدم خدمات شاملة في مجال الطاقة الشمسية منذ عام 2018.",
     services: [
       "بيع المنتجات",
       "تركيب الأنظمة",
@@ -52,12 +70,20 @@ const ShopDetail = () => {
       "الاستشارات",
       "التصميم",
     ],
-    products: [
-      "ألواح شمسية (Longi, Jinko, Canadian Solar)",
-      "بطاريات ليثيوم (Pylontech, BYD)",
-      "محولات (Growatt, SMA, Fronius)",
-      "أنظمة مراقبة ذكية",
-      "ملحقات التركيب",
+    workingHours: {
+      openTime: "8:00 ص",
+      closeTime: "8:00 م",
+      workingDays: ["السبت", "الأحد", "الاثنين", "الثلاثاء", "الأربعاء", "الخميس"]
+    },
+    socialMedia: {
+      facebook: "https://facebook.com/shop",
+      instagram: "https://instagram.com/shop",
+      twitter: "https://twitter.com/shop"
+    },
+    images: [
+      "https://picsum.photos/id/1011/600/400",
+      "https://picsum.photos/id/1012/600/400",
+      "https://picsum.photos/id/1013/600/400"
     ],
     brands: [
       "Longi",
@@ -68,455 +94,389 @@ const ShopDetail = () => {
       "Growatt",
       "SMA",
     ],
-    workingHours: "8:00 ص - 8:00 م",
-    established: "2018",
-    teamSize: "15 موظف",
-    projectsCompleted: "150+ مشروع",
-    warranty: "ضمان شامل على جميع المنتجات",
-    paymentOptions: ["نقداً", "شيكات", "تقسيط", "تحويل بنكي"],
+    productCategories: [
+      "ألواح شمسية",
+      "بطاريات",
+      "محولات",
+      "كابلات",
+      "ملحقات"
+    ],
+    establishedYear: "2018",
+    licenseNumber: "12345",
+    website: "www.shop.com",
+    notes: "متوفر خدمة التوصيل والتركيب المجاني",
+    location: {
+      latitude: 15.3694,
+      longitude: 44.1910
+    }
+  };
+
+  const handleCall = () => {
+    window.location.href = `tel:${shop.phone}`;
+  };
+
+  const handleDirections = () => {
+    if (shop.location) {
+      const url = `https://www.google.com/maps/search/?api=1&query=${shop.location.latitude},${shop.location.longitude}`;
+      window.open(url, '_blank');
+    }
+  };
+
+  const handleSocialMedia = (url) => {
+    if (url) window.open(url, '_blank');
   };
 
   return (
-    <Container maxWidth="lg" sx={{ py: 4 }}>
-      <Button
-        startIcon={<ArrowBack />}
-        onClick={() => navigate("/shops")}
-        sx={{ mb: 3 }}
-      >
-        العودة للمحلات
-      </Button>
+    <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+      {/* Header */}
+      <Box sx={{ 
+        display: 'flex', 
+        alignItems: 'center', 
+        mb: 3, 
+        bgcolor: '#16A34A',
+        p: 2,
+        borderRadius: 2,
+        color: 'white'
+      }}>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate("/shops")}
+          sx={{ color: 'white', fontWeight: "bold" }}
+        >
+          {t("common.back")}
+        </Button>
+        <Typography variant="h6" sx={{ flex: 1, textAlign: 'center', fontWeight: 'bold' }}>
+          {t("shops.title")}
+        </Typography>
+      </Box>
 
-      {/* Main Shop Profile */}
-      <Paper elevation={4} sx={{ borderRadius: 4, p: { xs: 2, md: 4 }, mb: 4 }}>
-        <Grid container spacing={4} alignItems="center">
-          <Grid item xs={12} md={5}>
-            <CardMedia
-              component="img"
-              image={shop.image}
-              alt={shop.name}
-              sx={{
-                width: "100%",
-                height: 300,
-                objectFit: "cover",
-                borderRadius: 3,
-                boxShadow: 3,
-              }}
-            />
-          </Grid>
-          <Grid item xs={12} md={7}>
-            <Box sx={{ textAlign: { xs: "center", md: "right" } }}>
-              <Typography
-                variant="h4"
-                component="h1"
-                gutterBottom
-                sx={{ fontWeight: "bold", mb: 3 }}
-              >
-                {shop.name}
-              </Typography>
-              <Typography
-                variant="body1"
-                paragraph
+      {/* Shop Profile */}
+      <Paper elevation={2} sx={{ borderRadius: 4, overflow: 'hidden', mb: 4 }}>
+        <Box sx={{ p: 4, textAlign: 'center' }}>
+          <CardMedia
+            component="img"
+            image={shop.logoUrl}
+            alt={shop.name}
+            sx={{ 
+              width: 120,
+              height: 120,
+              borderRadius: '50%',
+              mx: 'auto',
+              mb: 2
+            }}
+          />
+          
+          <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, mb: 2 }}>
+            <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+              {shop.name}
+            </Typography>
+            {shop.isVerified && (
+              <Chip
+                icon={<VerifiedUser sx={{ color: '#10B981 !important' }} />}
+                label={t("common.verified")}
                 sx={{
-                  mb: 3,
-                  lineHeight: 1.8,
-                  textAlign: { xs: "center", md: "right" },
+                  bgcolor: '#ECFDF5',
+                  color: '#10B981',
+                  '& .MuiChip-icon': { color: '#10B981' }
                 }}
-              >
-                {shop.description}
-              </Typography>
-              <Box
-                sx={{
-                  display: "flex",
-                  flexDirection: { xs: "column", sm: "row" },
-                  gap: 2,
-                  justifyContent: { xs: "center", md: "flex-end" },
-                }}
-              >
-                <Button
-                  variant="contained"
-                  color="primary"
-                  startIcon={<LocationOn />}
-                  size="medium"
-                  sx={{
-                    fontWeight: "bold",
-                    fontSize: "1rem",
-                    minWidth: "fit-content",
-                    "& .MuiButton-startIcon": {
-                      mr: { xs: 0.5, md: 1 },
-                      ml: { xs: 0.5, md: 1 },
-                    },
-                  }}
-                  onClick={() => {
-                    const query = encodeURIComponent(shop.address);
-                    window.open(
-                      `https://www.google.com/maps/search/?api=1&query=${query}`,
-                      "_blank"
-                    );
-                  }}
-                >
-                  الانتقال إلى موقع المحل
-                </Button>
-                <Button
-                  variant="contained"
-                  color="success"
-                  startIcon={<WhatsApp />}
-                  size="medium"
-                  sx={{
-                    fontWeight: "bold",
-                    fontSize: "1rem",
-                    minWidth: "fit-content",
-                    "& .MuiButton-startIcon": {
-                      mr: { xs: 0.5, md: 1 },
-                      ml: { xs: 0.5, md: 1 },
-                    },
-                  }}
-                  onClick={() => {
-                    const message = encodeURIComponent(
-                      `مرحباً، أنا مهتم بالتواصل مع المحل: ${shop.name}`
-                    );
-                    window.open(
-                      `https://wa.me/${shop.phone.replace(
-                        /\D/g,
-                        ""
-                      )}?text=${message}`,
-                      "_blank"
-                    );
-                  }}
-                >
-                  تواصل عبر واتساب
-                </Button>
-              </Box>
-            </Box>
-          </Grid>
-        </Grid>
+              />
+            )}
+          </Box>
+
+          <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
+            {shop.city}, {shop.governorate}
+          </Typography>
+        </Box>
       </Paper>
 
-      {/* Services and Brands */}
-      <Grid container spacing={4} sx={{ mb: 4 }}>
+      {/* Contact Buttons */}
+      <Grid container spacing={2} sx={{ mb: 4 }}>
+        <Grid item xs={12} sm={6}>
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<Phone />}
+            onClick={handleCall}
+            sx={{
+              bgcolor: '#16A34A',
+              '&:hover': { bgcolor: '#15803D' },
+              py: 1.5,
+              borderRadius: 3
+            }}
+          >
+            {t("common.phone")}
+          </Button>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <Button
+            fullWidth
+            variant="contained"
+            startIcon={<LocationOn />}
+            onClick={handleDirections}
+            sx={{
+              bgcolor: '#3B82F6',
+              '&:hover': { bgcolor: '#2563EB' },
+              py: 1.5,
+              borderRadius: 3
+            }}
+          >
+            {t("shops.directions")} 
+          </Button>
+        </Grid>
+      </Grid>
+
+      <Grid container spacing={4}>
+        {/* Services Section */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, height: "100%" }}>
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{ fontWeight: "bold", mb: 3 }}
-            >
-              الخدمات المقدمة
+          <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold">
+              {t("shops.servicesProvided")}
             </Typography>
-            <List sx={{ p: 0 }}>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {shop.services.map((service, index) => (
-                <ListItem key={index} sx={{ py: 1, px: 0 }}>
-                  <ListItemIcon sx={{ minWidth: 40 }}>
-                    <CheckCircle color="primary" fontSize="small" />
-                  </ListItemIcon>
-                  <ListItemText
-                    primary={service}
-                    sx={{
-                      textAlign: "right",
-                      "& .MuiListItemText-primary": {
-                        fontWeight: 500,
-                      },
-                    }}
-                  />
-                </ListItem>
+                <Chip
+                  key={index}
+                  label={service}
+                  sx={{
+                    bgcolor: '#F0FDF4',
+                    color: '#166534',
+                    border: '1px solid #DCFCE7'
+                  }}
+                />
               ))}
-            </List>
+            </Box>
           </Paper>
         </Grid>
 
+        {/* Working Hours */}
         <Grid item xs={12} md={6}>
-          <Paper sx={{ p: 3, height: "100%" }}>
-            <Typography
-              variant="h6"
-              gutterBottom
-              sx={{ fontWeight: "bold", mb: 3 }}
-            >
-              العلامات التجارية المعتمدة
+          <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold">
+              {t("shops.workingHours")}
             </Typography>
-            <Box
-              sx={{
-                display: "flex",
-                flexWrap: "wrap",
-                gap: 1,
-                justifyContent: { xs: "center", md: "flex-end" },
-              }}
-            >
+            <Stack spacing={2}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2,  }}>
+                <Schedule sx={{ color: '#16A34A' }} />
+                <Typography>
+                  {shop.workingHours.openTime} - {shop.workingHours.closeTime}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                {shop.workingHours.workingDays.map((day, index) => (
+                  <Chip
+                    key={index}
+                    label={day}
+                    sx={{
+                      bgcolor: '#EFF6FF',
+                      color: '#166534',
+                      border: '1px solid #DBEAFE'
+                    }}
+                  />
+                ))}
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
+
+        {/* Social Media */}
+        {shop.socialMedia && Object.keys(shop.socialMedia).length > 0 && (
+          <Grid item xs={12}>
+            <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                {t("shops.socialMedia")}
+              </Typography>
+              <Stack direction="row" spacing={2}>
+                {shop.socialMedia.facebook && (
+                  <IconButton
+                    onClick={() => handleSocialMedia(shop.socialMedia.facebook)}
+                    sx={{ 
+                      bgcolor: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      '&:hover': { bgcolor: '#F1F5F9' }
+                    }}
+                  >
+                    <Facebook sx={{ color: '#1877F2' }} />
+                  </IconButton>
+                )}
+                {shop.socialMedia.instagram && (
+                  <IconButton
+                    onClick={() => handleSocialMedia(shop.socialMedia.instagram)}
+                    sx={{ 
+                      bgcolor: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      '&:hover': { bgcolor: '#F1F5F9' }
+                    }}
+                  >
+                    <Instagram sx={{ color: '#E4405F' }} />
+                  </IconButton>
+                )}
+                {shop.socialMedia.twitter && (
+                  <IconButton
+                    onClick={() => handleSocialMedia(shop.socialMedia.twitter)}
+                    sx={{ 
+                      bgcolor: '#F8FAFC',
+                      border: '1px solid #E2E8F0',
+                      '&:hover': { bgcolor: '#F1F5F9' }
+                    }}
+                  >
+                    <Twitter sx={{ color: '#1DA1F2' }} />
+                  </IconButton>
+                )}
+              </Stack>
+            </Paper>
+          </Grid>
+        )}
+
+        {/* Gallery */}
+        {shop.images && shop.images.length > 0 && (
+          <Grid item xs={12}>
+            <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                {t("shops.gallery")}
+              </Typography>
+              <ImageList cols={3} gap={16}>
+                {shop.images.map((image, index) => (
+                  <ImageListItem 
+                    key={index}
+                    sx={{ 
+                      cursor: 'pointer',
+                      borderRadius: 2,
+                      overflow: 'hidden'
+                    }}
+                    onClick={() => setSelectedImage(image)}
+                  >
+                    <img
+                      src={image}
+                      alt={`Gallery ${index + 1}`}
+                      loading="lazy"
+                      style={{ borderRadius: 8 }}
+                    />
+                  </ImageListItem>
+                ))}
+              </ImageList>
+            </Paper>
+          </Grid>
+        )}
+
+        {/* Brands */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold">
+              {t("shops.brands")}
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
               {shop.brands.map((brand, index) => (
                 <Chip
                   key={index}
                   label={brand}
-                  color="primary"
-                  variant="outlined"
-                  sx={{ fontWeight: 500 }}
+                  sx={{
+                    bgcolor: '#FEF3C7',
+                    color: '#D97706',
+                    border: '1px solid #FDE68A'
+                  }}
                 />
               ))}
             </Box>
           </Paper>
         </Grid>
+
+        {/* Product Categories */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold">
+              {t("shops.productCategories")}
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {shop.productCategories.map((category, index) => (
+                <Chip
+                  key={index}
+                  label={category}
+                  sx={{
+                    bgcolor: '#EFF6FF',
+                    color: '#1D4ED8',
+                    border: '1px solid #DBEAFE'
+                  }}
+                />
+              ))}
+            </Box>
+          </Paper>
+        </Grid>
+
+        {/* Additional Info */}
+        <Grid item xs={12}>
+          <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold">
+              {t("shops.additionalInfo")}
+            </Typography>
+            <Stack spacing={2}>
+              {shop.establishedYear && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Business sx={{ color: '#16A34A' }} />
+                  <Typography>
+                    {t("shops.establishedYear")}: {shop.establishedYear}
+                  </Typography>
+                </Box>
+              )}
+              {shop.licenseNumber && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <VerifiedUser sx={{ color: '#16A34A' }} />
+                  <Typography>
+                    {t("shops.licenseNumber")}: {shop.licenseNumber}
+                  </Typography>
+                </Box>
+              )}
+              {shop.website && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Language sx={{ color: '#16A34A' }} />
+                  <Typography>{shop.website}</Typography>
+                </Box>
+              )}
+              {shop.notes && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <Notes sx={{ color: '#16A34A' }} />
+                  <Typography>{shop.notes}</Typography>
+                </Box>
+              )}
+            </Stack>
+          </Paper>
+        </Grid>
       </Grid>
 
-      {/* Statistics */}
-      <Paper sx={{ p: 4, mb: 4 }}>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ fontWeight: "bold", mb: 4, textAlign: "center" }}
-        >
-          إحصائيات المحل
-        </Typography>
-        <Grid container spacing={4}>
-          <Grid item xs={12} sm={4}>
-            <Box sx={{ textAlign: "center" }}>
-              <Typography
-                variant="h3"
-                color="primary"
-                sx={{ fontWeight: "bold", mb: 1 }}
-              >
-                {shop.teamSize}
-              </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ fontWeight: 500 }}
-              >
-                حجم الفريق
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Box sx={{ textAlign: "center" }}>
-              <Typography
-                variant="h3"
-                color="primary"
-                sx={{ fontWeight: "bold", mb: 1 }}
-              >
-                {shop.projectsCompleted}
-              </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ fontWeight: 500 }}
-              >
-                المشاريع المنجزة
-              </Typography>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={4}>
-            <Box sx={{ textAlign: "center" }}>
-              <Typography
-                variant="h3"
-                color="primary"
-                sx={{ fontWeight: "bold", mb: 1 }}
-              >
-                {shop.established}
-              </Typography>
-              <Typography
-                variant="body1"
-                color="text.secondary"
-                sx={{ fontWeight: 500 }}
-              >
-                سنة التأسيس
-              </Typography>
-            </Box>
-          </Grid>
-        </Grid>
-      </Paper>
-
-      {/* Contact Information */}
-      <Paper sx={{ p: 4 }}>
-        <Typography
-          variant="h6"
-          gutterBottom
-          sx={{ fontWeight: "bold", mb: 4, textAlign: "center" }}
-        >
-          معلومات التواصل
-        </Typography>
-        <Grid container spacing={4}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                flexDirection: { xs: "row", md: "row-reverse" },
-                textAlign: { xs: "center", md: "right" },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: { xs: "center", md: "flex-end" },
-                  width: "100%",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: { xs: "center", md: "flex-end" },
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1, fontWeight: 500 }}
-                  >
-                    الهاتف
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {shop.phone}
-                  </Typography>
-                </Box>
-                <Phone
-                  sx={{
-                    color: "primary.main",
-                    ml: { xs: 1, md: 2 },
-                    mr: { xs: 0, md: 0 },
-                    fontSize: 28,
-                  }}
-                />
-              </Box>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                flexDirection: { xs: "row", md: "row-reverse" },
-                textAlign: { xs: "center", md: "right" },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: { xs: "center", md: "flex-end" },
-                  width: "100%",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: { xs: "center", md: "flex-end" },
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1, fontWeight: 500 }}
-                  >
-                    البريد الإلكتروني
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {shop.email}
-                  </Typography>
-                </Box>
-                <Email
-                  sx={{
-                    color: "primary.main",
-                    ml: { xs: 1, md: 2 },
-                    mr: { xs: 0, md: 0 },
-                    fontSize: 28,
-                  }}
-                />
-              </Box>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                flexDirection: { xs: "row", md: "row-reverse" },
-                textAlign: { xs: "center", md: "right" },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: { xs: "center", md: "flex-end" },
-                  width: "100%",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: { xs: "center", md: "flex-end" },
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1, fontWeight: 500 }}
-                  >
-                    العنوان
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {shop.address}
-                  </Typography>
-                </Box>
-                <LocationOn
-                  sx={{
-                    color: "primary.main",
-                    ml: { xs: 1, md: 2 },
-                    mr: { xs: 0, md: 0 },
-                    fontSize: 28,
-                  }}
-                />
-              </Box>
-            </Box>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                flexDirection: { xs: "row", md: "row-reverse" },
-                textAlign: { xs: "center", md: "right" },
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: { xs: "center", md: "flex-end" },
-                  width: "100%",
-                }}
-              >
-                <Box
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: { xs: "center", md: "flex-end" },
-                  }}
-                >
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mb: 1, fontWeight: 500 }}
-                  >
-                    ساعات العمل
-                  </Typography>
-                  <Typography variant="body1" sx={{ fontWeight: 500 }}>
-                    {shop.workingHours}
-                  </Typography>
-                </Box>
-                <AccessTime
-                  sx={{
-                    color: "primary.main",
-                    ml: { xs: 1, md: 2 },
-                    mr: { xs: 0, md: 0 },
-                    fontSize: 28,
-                  }}
-                />
-              </Box>
-            </Box>
-          </Grid>
-        </Grid>
-      </Paper>
+      {/* Image Viewer Modal */}
+      <Modal
+        open={!!selectedImage}
+        onClose={() => setSelectedImage(null)}
+        sx={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          p: 2
+        }}
+      >
+        <Box sx={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
+          <IconButton
+            onClick={() => setSelectedImage(null)}
+            sx={{
+              position: 'absolute',
+              top: -40,
+              right: 0,
+              color: 'white'
+            }}
+          >
+            <CloseIcon />
+          </IconButton>
+          <img
+            src={selectedImage}
+            alt="Gallery"
+            style={{
+              maxWidth: '100%',
+              maxHeight: '90vh',
+              objectFit: 'contain',
+              borderRadius: 8
+            }}
+          />
+        </Box>
+      </Modal>
     </Container>
   );
 };
