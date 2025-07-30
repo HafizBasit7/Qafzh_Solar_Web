@@ -396,6 +396,7 @@ const ProductDetail = () => {
                 </Button>
               )}
             </Stack>
+            
           </Paper>
         </Grid>
       </Grid>
