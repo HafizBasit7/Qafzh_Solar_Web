@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -10,70 +10,76 @@ import {
   Typography,
   Alert,
   CircularProgress,
+  Link,
 } from "@mui/material";
 import { Close, Phone, Lock, PersonAdd } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
+import { useAuthContext } from "../contexts/AuthContext";
+import { useDialogContext } from "../contexts/DialogContext";
 
-const SignupModal = ({ open, onClose, onSuccess }) => {
+const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
   const { t } = useTranslation();
+  const { showSuccess, showError } = useDialogContext();
+  const { 
+    register, 
+    registerLoading, 
+    registerError, 
+    requestOTP, 
+    requestOTPLoading, 
+    requestOTPError,
+    verifyOTP, 
+    verifyOTPLoading, 
+    verifyOTPError,
+    isAuthenticated 
+  } = useAuthContext();
+  
   const [step, setStep] = useState("phone"); // "phone", "otp", "success"
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  
+  // If user becomes authenticated, close modal and trigger success
+  useEffect(() => {
+    if (isAuthenticated && open) {
+      showSuccess(t("signup.successfulSignup"), t("signup.welcome"));
+      onSuccess();
+      handleClose();
+    }
+  }, [isAuthenticated, open, onSuccess, showSuccess, t]);
 
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
     if (!phoneNumber || phoneNumber.length < 8) {
-      setError(t("register.invalidPhone"));
+      setError(t("signup.invalidPhone"));
       return;
     }
 
-    setLoading(true);
     setError("");
 
-    // Simulate API call to register user and send OTP
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API delay
+      await requestOTP(phoneNumber);
       setStep("otp");
-      setLoading(false);
     } catch (err) {
-      setError(t("register.sendOtpError"));
-      setLoading(false);
+      setError(err.message || t("signup.sendOtpError"));
     }
   };
 
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
     if (!otp || otp.length !== 4) {
-      setError(t("register.invalidOtp"));
+      setError(t("signup.invalidOtp"));
       return;
     }
 
-    setLoading(true);
     setError("");
 
-    // Simulate API call to verify OTP
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API delay
-
-      // For demo purposes, accept any 4-digit OTP
-      if (otp.length === 4) {
-        setStep("success");
-        setLoading(false);
-
-        // Auto close success modal after 3 seconds
-        setTimeout(() => {
-          onSuccess();
-          handleClose();
-        }, 3000);
-      } else {
-        setError(t("register.invalidOtp"));
-        setLoading(false);
-      }
+      // First verify OTP, then register the user
+      await verifyOTP({ phone: phoneNumber, otp });
+      await register({ phone: phoneNumber });
+      // If registration is successful, the useEffect will handle the success
     } catch (err) {
-      setError(t("register.verifyOtpError"));
-      setLoading(false);
+      setError(err.message || t("signup.verifyOtpError"));
     }
   };
 
@@ -82,7 +88,6 @@ const SignupModal = ({ open, onClose, onSuccess }) => {
     setPhoneNumber("");
     setOtp("");
     setError("");
-    setLoading(false);
     onClose();
   };
 
@@ -136,14 +141,14 @@ const SignupModal = ({ open, onClose, onSuccess }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || !phoneNumber}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
+            disabled={requestOTPLoading || !phoneNumber}
+            startIcon={requestOTPLoading ? <CircularProgress size={20} /> : null}
             sx={{
               backgroundColor: "#2e7d32",
               "&:hover": { backgroundColor: "#1b5e20" },
             }}
           >
-            {loading ? t("register.sending") : t("register.sendOtp")}
+            {requestOTPLoading ? t("signup.sending") : t("signup.sendOtp")}
           </Button>
         </DialogActions>
       </form>
@@ -218,14 +223,14 @@ const SignupModal = ({ open, onClose, onSuccess }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || otp.length !== 4}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
+            disabled={verifyOTPLoading || registerLoading || otp.length !== 4}
+            startIcon={(verifyOTPLoading || registerLoading) ? <CircularProgress size={20} /> : null}
             sx={{
               backgroundColor: "#2e7d32",
               "&:hover": { backgroundColor: "#1b5e20" },
             }}
           >
-            {loading ? t("register.verifying") : t("register.verifyOtp")}
+            {(verifyOTPLoading || registerLoading) ? t("signup.verifying") : t("signup.verifyOtp")}
           </Button>
         </DialogActions>
       </form>

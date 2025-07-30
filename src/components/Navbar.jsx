@@ -26,12 +26,16 @@ import {
   Add,
   Menu,
 } from "@mui/icons-material";
+import { useAuthContext } from "../contexts/AuthContext";
+import { useDialogContext } from "../contexts/DialogContext";
 import SellingForm from "./SellingForm";
 
 const Navbar = ({ language, onLanguageToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const { isAuthenticated, user, logout } = useAuthContext();
+  const { showSuccess } = useDialogContext();
   const [sellingFormOpen, setSellingFormOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -54,6 +58,11 @@ const Navbar = ({ language, onLanguageToggle }) => {
   const handleStartSellingClick = () => {
     setSellingFormOpen(true);
     setMobileMenuOpen(false);
+  };
+  
+  const handleLogout = async () => {
+    await logout();
+    showSuccess(t("auth.logoutSuccess"), t("auth.comeBackSoon"));
   };
 
   const renderDesktopNav = () => (

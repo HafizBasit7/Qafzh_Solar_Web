@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -10,7 +10,6 @@ import {
   CardMedia,
   Button,
   Chip,
-  Rating,
   Divider,
   Paper,
   List,
@@ -19,6 +18,8 @@ import {
   ListItemIcon,
   CardActions,
   Stack,
+  Skeleton,
+  Alert,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -36,57 +37,95 @@ import {
   Power as PowerIcon,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
+import { useProduct, useUpdateProductViews } from "../hooks/useProducts";
 
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { data: product, isLoading, isError, error } = useProduct(id);
+  const updateViewsMutation = useUpdateProductViews();
 
-  // Sample product data (in real app, this would come from API)
-  const product = {
-    id: parseInt(id),
-    name: "لوح شمسي 550 واط",
-    brand: "Longi",
-    model: "Hi-MO 5m-72-550W",
-    type: "Panel",
-    condition: "New",
-    price: 2500,
-    currency: "YER",
-    image: "https://picsum.photos/id/1015/500/400",
-    description: "لوح شمسي عالي الكفاءة مع ضمان 25 سنة. مصمم للاستخدام المنزلي والتجاري مع كفاءة تحويل تصل إلى 21.3%.",
-    specifications: {
-      power: "550W",
-      voltage: "24V",
-      capacity: "N/A",
-      warranty: "25 Years"
-    },
-    isNegotiable: true,
-    featured: true,
-    status: "pending",
-    createdAt: new Date(),
-    expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-    seller: {
-      name: "محل الطاقة الشمسية المتقدم",
-      phone: "+967 777 123 456",
-      whatsappPhone: "+967 777 123 456",
-      location: {
-        governorate: "صنعاء",
-        city: "شارع تعز",
-        locationText: "بجوار البنك المركزي"
-      }
+  // Update view count when product loads
+  useEffect(() => {
+    if (product?._id) {
+      updateViewsMutation.mutate(product._id);
     }
-  };
+  }, [product?._id]);
 
   const handleCallSeller = () => {
-    window.location.href = `tel:${product.seller.phone}`;
+    if (!product?.phone) return;
+    window.location.href = `tel:${product.phone}`;
   };
 
   const handleWhatsApp = () => {
-    const message = encodeURIComponent(`مرحباً، أنا مهتم بمنتج: ${product.name}`);
+    if (!product?.whatsappPhone) return;
+    const message = encodeURIComponent(
+      t("products.whatsappMessage", { productName: product.name })
+    );
     window.open(
-      `https://wa.me/${product.seller.whatsappPhone.replace(/\D/g, "")}?text=${message}`,
+      `https://wa.me/${product.whatsappPhone.replace(/\D/g, "")}?text=${message}`,
       "_blank"
     );
+  };
+
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+        <Skeleton variant="rectangular" width="100%" height={400} />
+        <Skeleton variant="text" height={60} />
+        <Skeleton variant="text" height={40} />
+      </Container>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+        <Alert severity="error">
+          {error?.message || t("products.errorLoading")}
+        </Alert>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate("/products")}
+          sx={{ mt: 2 }}
+        >
+          {t("common.back")}
+        </Button>
+      </Container>
+    );
+  }
+
+  if (!product) {
+    return (
+      <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
+        <Alert severity="warning">{t("products.notFound")}</Alert>
+        <Button
+          startIcon={<ArrowBack />}
+          onClick={() => navigate("/products")}
+          sx={{ mt: 2 }}
+        >
+          {t("common.back")}
+        </Button>
+      </Container>
+    );
+  }
+
+  // Format date for display
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  // Format price with currency
+  const formatPrice = (price, currency) => {
+    if (!price) return t("products.priceNotAvailable");
+    const formatted = new Intl.NumberFormat().format(price);
+    switch (currency) {
+      case "USD": return `$${formatted}`;
+      case "SAR": return `${formatted} SAR`;
+      case "YER": return `${formatted} YER`;
+      default: return `${formatted} ${currency || ''}`;
+    }
   };
 
   return (
@@ -124,7 +163,7 @@ const ProductDetail = () => {
               position: 'relative'
             }}
           >
-            {product.featured && (
+            {product.isFeatured && (
               <Chip
                 icon={<StarIcon sx={{ color: '#F59E0B !important' }} />}
                 label={t("products.featured")}
@@ -140,7 +179,7 @@ const ProductDetail = () => {
             )}
             <CardMedia
               component="img"
-              image={product.image}
+              image={product.images?.[0] || "/placeholder-product.jpg"}
               alt={product.name}
               sx={{
                 width: "100%",
@@ -168,7 +207,7 @@ const ProductDetail = () => {
                       {t("products.type")}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {product.type}
+                      {product.type || t("products.notSpecified")}
                     </Typography>
                   </Stack>
                 </Paper>
@@ -195,10 +234,10 @@ const ProductDetail = () => {
                   <Stack spacing={1} alignItems="flex-start">
                     <BusinessIcon sx={{ color: '#64748B' }} />
                     <Typography color="text.secondary" variant="body2">
-                      {t("selling.brand")}
+                      {t("products.brand")}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {product.brand} {product.model}
+                      {product.brand || t("products.notSpecified")} {product.model && `(${product.model})`}
                     </Typography>
                   </Stack>
                 </Paper>
@@ -211,7 +250,7 @@ const ProductDetail = () => {
                       {t("products.location")}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {product.seller.location.city}, {product.seller.location.governorate}
+                      {product.city}, {product.governorate}
                     </Typography>
                   </Stack>
                 </Paper>
@@ -222,7 +261,7 @@ const ProductDetail = () => {
             <Box sx={{ mb: 3 }}>
               <Stack direction="row" alignItems="center" spacing={2}>
                 <Typography variant="h5" color="primary" fontWeight="bold">
-                  {product.price.toLocaleString()} {product.currency === "YER" ? "﷼" : "$"}
+                  {formatPrice(product.price, product.currency)}
                 </Typography>
                 {product.isNegotiable && (
                   <Typography color="#F59E0B" variant="subtitle1">
@@ -235,7 +274,7 @@ const ProductDetail = () => {
             {/* Description */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom fontWeight="bold">
-                {t("products.details")}
+                {t("products.description")}
               </Typography>
               <Typography variant="body1" color="text.secondary">
                 {product.description || t("products.noDescription")}
@@ -249,10 +288,10 @@ const ProductDetail = () => {
               </Typography>
               <Paper sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: 3 }}>
                 <Grid container spacing={2}>
-                  {Object.entries(product.specifications).map(([key, value]) => (
+                  {product.specifications && Object.entries(product.specifications).map(([key, value]) => (
                     <Grid item xs={6} key={key}>
                       <Typography color="text.secondary" variant="body2">
-                        {t(`products.${key}`)}
+                        {t(`products.specs.${key}`) || key}
                       </Typography>
                       <Typography variant="body1" fontWeight="bold">
                         {value || t("products.notSpecified")}
@@ -268,52 +307,63 @@ const ProductDetail = () => {
               <Paper sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: 3 }}>
                 <Stack spacing={1}>
                   <Typography variant="body2" color="text.secondary">
-                    {t("products.status")}: <Typography component="span" fontWeight="bold">{product.status}</Typography>
+                    {t("products.status")}: <Typography component="span" fontWeight="bold">
+                      {t(`products.statuses.${product.status}`)}
+                    </Typography>
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    {t("products.listedOn")}: <Typography component="span" fontWeight="bold">
-                      {new Date(product.createdAt).toLocaleDateString()}
+                    {t("products.postedAt")}: <Typography component="span" fontWeight="bold">
+                      {formatDate(product.postedAt)}
                     </Typography>
                   </Typography>
                   {product.expiresAt && (
                     <Typography variant="body2" color="text.secondary">
-                      {t("products.expiresOn")}: <Typography component="span" fontWeight="bold">
-                        {new Date(product.expiresAt).toLocaleDateString()}
+                      {t("products.expiresAt")}: <Typography component="span" fontWeight="bold">
+                        {formatDate(product.expiresAt)}
                       </Typography>
                     </Typography>
                   )}
+                  <Typography variant="body2" color="text.secondary">
+                    {t("products.views")}: <Typography component="span" fontWeight="bold">
+                      {product.viewCount || 0}
+                    </Typography>
+                  </Typography>
                 </Stack>
               </Paper>
             </Box>
 
-            {/* Seller Info */}
+            {/* Contact Info */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom fontWeight="bold">
-                {t("products.sellerInfo")}
+                {t("products.contactInfo")}
               </Typography>
               <Paper sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: 3 }}>
                 <Stack spacing={2}>
-                  <Typography variant="body1">
-                    <Phone sx={{ mr: 1, color: '#16A34A', fontSize: 20 }} />
-                    {product.seller.phone}
-                  </Typography>
-                  {product.seller.whatsappPhone && (
+                  {product.phone && (
                     <Typography variant="body1">
-                      <WhatsApp sx={{ mr: 1, color: '#25D366', fontSize: 20 }} />
-                      {product.seller.whatsappPhone}
+                      <Phone sx={{ mr: 1, color: '#16A34A', fontSize: 20 }} />
+                      {product.phone}
                     </Typography>
                   )}
-                  <Typography variant="body1">
-                    <LocationOn sx={{ mr: 1, color: '#64748B', fontSize: 20 }} />
-                    {product.seller.location.locationText}
-                  </Typography>
+                  {product.whatsappPhone && (
+                    <Typography variant="body1">
+                      <WhatsApp sx={{ mr: 1, color: '#25D366', fontSize: 20 }} />
+                      {product.whatsappPhone}
+                    </Typography>
+                  )}
+                  {product.locationText && (
+                    <Typography variant="body1">
+                      <LocationOn sx={{ mr: 1, color: '#64748B', fontSize: 20 }} />
+                      {product.locationText}
+                    </Typography>
+                  )}
                 </Stack>
               </Paper>
             </Box>
 
             {/* Contact Buttons */}
             <Stack direction="row" spacing={2}>
-              {product.seller.whatsappPhone && (
+              {product.whatsappPhone && (
                 <Button
                   variant="contained"
                   startIcon={<WhatsApp />}
@@ -329,20 +379,22 @@ const ProductDetail = () => {
                   {t("products.whatsapp")}
                 </Button>
               )}
-              <Button
-                variant="contained"
-                startIcon={<Phone />}
-                onClick={handleCallSeller}
-                fullWidth
-                sx={{
-                  bgcolor: '#16A34A',
-                  '&:hover': { bgcolor: '#15803D' },
-                  py: 1.5,
-                  borderRadius: 3
-                }}
-              >
-                {t("products.callSeller")}
-              </Button>
+              {product.phone && (
+                <Button
+                  variant="contained"
+                  startIcon={<Phone />}
+                  onClick={handleCallSeller}
+                  fullWidth
+                  sx={{
+                    bgcolor: '#16A34A',
+                    '&:hover': { bgcolor: '#15803D' },
+                    py: 1.5,
+                    borderRadius: 3
+                  }}
+                >
+                  {t("products.callSeller")}
+                </Button>
+              )}
             </Stack>
           </Paper>
         </Grid>

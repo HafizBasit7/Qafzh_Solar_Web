@@ -18,6 +18,8 @@ import {
   Chip,
   Rating,
   Divider,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -29,103 +31,43 @@ import {
   Store,
   Star,
 } from "@mui/icons-material";
+import { useTranslation } from "react-i18next";
+import { useShopsQuery } from "../hooks/useShops";
+import { LoadingOverlay } from "../components/loaders/LoadingOverlay";
 
 const ShopsPage = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedRating, setSelectedRating] = useState("");
   const [selectedService, setSelectedService] = useState("");
   const [expandedDescriptions, setExpandedDescriptions] = useState({});
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(12);
+  
+  // Initialize hooks
+  const shopsHook = useShopsQuery();
 
-  // Sample shop data
-  const shops = [
-    {
-      id: 1,
-      name: "محل الطاقة الشمسية المتقدم",
-      location: "صنعاء",
-      phone: "+967 777 123 456",
-      email: "shop1@example.com",
-      address: "شارع الزبيري، صنعاء",
-      image: "https://picsum.photos/id/1011/400/250",
-      services: ["بيع المنتجات", "تركيب الأنظمة", "الصيانة", "الاستشارات"],
-      description:
-        "محل متخصص في بيع وتركيب الأنظمة الشمسية مع فريق فني محترف. نقدم خدمات شاملة في مجال الطاقة الشمسية منذ عام 2018. لدينا خبرة واسعة في تركيب الأنظمة المنزلية والتجارية والصناعية. نستخدم أحدث التقنيات والمنتجات عالية الجودة لضمان أفضل النتائج لعملائنا الكرام.",
-      workingHours: "8:00 ص - 8:00 م",
-      established: "2018",
-    },
-    {
-      id: 2,
-      name: "مركز الطاقة الخضراء",
-      location: "عدن",
-      phone: "+967 777 234 567",
-      email: "shop2@example.com",
-      address: "شارع الجمهورية، عدن",
-      image: "https://picsum.photos/id/1012/400/250",
-      services: ["بيع المنتجات", "تركيب الأنظمة", "الصيانة"],
-      description: "مركز شامل لجميع احتياجات الطاقة الشمسية في عدن",
-      workingHours: "9:00 ص - 9:00 م",
-      established: "2019",
-    },
-    {
-      id: 3,
-      name: "محل الشمس الذهبية",
-      location: "تعز",
-      phone: "+967 777 345 678",
-      email: "shop3@example.com",
-      address: "شارع القاهرة، تعز",
-      image: "https://picsum.photos/id/1013/400/250",
-      services: [
-        "بيع المنتجات",
-        "تركيب الأنظمة",
-        "الصيانة",
-        "الاستشارات",
-        "التصميم",
-      ],
-      description: "محل رائد في مجال الطاقة الشمسية مع خبرة 10 سنوات",
-      workingHours: "8:30 ص - 8:30 م",
-      established: "2015",
-    },
-    {
-      id: 4,
-      name: "محل الطاقة المستدامة",
-      location: "الحديدة",
-      phone: "+967 777 456 789",
-      email: "shop4@example.com",
-      address: "شارع البحر، الحديدة",
-      image: "https://picsum.photos/id/1014/400/250",
-      services: ["بيع المنتجات", "تركيب الأنظمة"],
-      description: "محل متخصص في بيع وتركيب الأنظمة الشمسية للمنازل",
-      workingHours: "8:00 ص - 7:00 م",
-      established: "2020",
-    },
-    {
-      id: 5,
-      name: "محل الطاقة المتجددة",
-      location: "إب",
-      phone: "+967 777 567 890",
-      email: "shop5@example.com",
-      address: "شارع السوق، إب",
-      image: "https://picsum.photos/id/1015/400/250",
-      services: ["بيع المنتجات", "تركيب الأنظمة", "الصيانة", "الاستشارات"],
-      description: "محل معتمد لبيع وتركيب وصيانة الأنظمة الشمسية",
-      workingHours: "9:00 ص - 8:00 م",
-      established: "2017",
-    },
-    {
-      id: 6,
-      name: "محل الطاقة النظيفة",
-      location: "صنعاء",
-      phone: "+967 777 678 901",
-      email: "shop6@example.com",
-      address: "شارع الستين، صنعاء",
-      image: "https://picsum.photos/id/1016/400/250",
-      services: ["بيع المنتجات", "الصيانة"],
-      description: "محل متخصص في بيع المنتجات الشمسية وصيانتها",
-      workingHours: "8:30 ص - 7:30 م",
-      established: "2021",
-    },
-  ];
+  // Get shops with filters
+  const {
+    data: shopsData,
+    isLoading: isLoadingShops,
+    isError: isErrorShops,
+    error: shopsError,
+    refetch: refetchShops
+  } = useShopsQuery({
+    search_keyword: searchTerm,
+    governorate: selectedLocation,
+    service: selectedService,
+    page,
+    limit: pageSize
+  });
+  
+  // Extract shops from API response
+  const shops = shopsData?.pages?.flatMap(page => page.data) || [];
+  const totalShops = shopsData?.pages?.[0]?.total || 0;
+  const totalPages = Math.ceil(totalShops / pageSize);
 
   const locations = ["صنعاء", "عدن", "تعز", "الحديدة", "إب", "حضرموت"];
   const services = [
@@ -136,17 +78,13 @@ const ShopsPage = () => {
     "التصميم",
   ];
 
-  const filteredShops = shops.filter((shop) => {
-    const matchesSearch =
-      shop.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      shop.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation =
-      !selectedLocation || shop.location === selectedLocation;
-    const matchesService =
-      !selectedService || shop.services.includes(selectedService);
-
-    return matchesSearch && matchesLocation && matchesService;
-  });
+  // Handle pagination
+  const handlePageChange = (event, value) => {
+    setPage(value);
+  };
+  
+  // We don't need to filter shops locally since the API handles filtering
+  const filteredShops = shops;
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -156,21 +94,21 @@ const ShopsPage = () => {
         gutterBottom
         sx={{ fontWeight: "bold", textAlign: "center", mb: 4 }}
       >
-        المحلات المعتمدة
+        {t("shops.title", "المحلات المعتمدة")}
       </Typography>
 
       {/* Filters Section */}
       <Paper sx={{ p: 3, mb: 4 }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <FilterList sx={{ mr: 1 }} />
-          <Typography variant="h6">الفلاتر</Typography>
+          <Typography variant="h6">{t("shops.filters", "الفلاتر")}</Typography>
         </Box>
 
         <Grid container spacing={3}>
           <Grid item xs={12} md={3}>
             <TextField
               fullWidth
-              label="البحث"
+              label={t("common.search", "البحث")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               InputProps={{
@@ -183,15 +121,15 @@ const ShopsPage = () => {
 
           <Grid item xs={12} md={3}>
             <FormControl fullWidth sx={{ minWidth: 160 }}>
-              <InputLabel sx={{ fontSize: "1rem" }}>الموقع</InputLabel>
+              <InputLabel sx={{ fontSize: "1rem" }}>{t("common.location", "الموقع")}</InputLabel>
               <Select
                 value={selectedLocation}
-                label="الموقع"
+                label={t("common.location", "الموقع")}
                 onChange={(e) => setSelectedLocation(e.target.value)}
                 sx={{ fontSize: "1rem" }}
               >
                 <MenuItem value="" sx={{ fontSize: "1rem" }}>
-                  الكل
+                  {t("common.all", "الكل")}
                 </MenuItem>
                 {locations.map((location) => (
                   <MenuItem
@@ -207,15 +145,15 @@ const ShopsPage = () => {
           </Grid>
           <Grid item xs={12} md={3}>
             <FormControl fullWidth sx={{ minWidth: 160 }}>
-              <InputLabel sx={{ fontSize: "1rem" }}>الخدمات</InputLabel>
+              <InputLabel sx={{ fontSize: "1rem" }}>{t("shops.services", "الخدمات")}</InputLabel>
               <Select
                 value={selectedService}
-                label="الخدمات"
+                label={t("shops.services", "الخدمات")}
                 onChange={(e) => setSelectedService(e.target.value)}
                 sx={{ fontSize: "1rem" }}
               >
                 <MenuItem value="" sx={{ fontSize: "1rem" }}>
-                  الكل
+                  {t("common.all", "الكل")}
                 </MenuItem>
                 {services.map((service) => (
                   <MenuItem
@@ -232,131 +170,180 @@ const ShopsPage = () => {
         </Grid>
       </Paper>
 
+      {/* Loading State */}
+      {isLoadingShops && (
+        <LoadingOverlay message={t("shops.loading", "جاري تحميل المحلات...")} />
+      )}
+
+      {/* Error State */}
+      {isErrorShops && (
+        <Alert severity="error" sx={{ mb: 3 }}>
+          {t("shops.error", "حدث خطأ أثناء تحميل المحلات. يرجى المحاولة مرة أخرى.")}
+        </Alert>
+      )}
+
       {/* Shops Grid */}
-      <Grid container spacing={3}>
-        {filteredShops.map((shop) => (
-          <Grid item xs={12} sm={6} md={4} key={shop.id}>
-            <Card
-              sx={{
-                height: "100%",
-                display: "flex",
-                flexDirection: "column",
-                cursor: "pointer",
-                transition: "transform 0.2s, box-shadow 0.2s",
-                "&:hover": {
-                  transform: "translateY(-4px)",
-                  boxShadow: 4,
-                },
-              }}
-              onClick={() => navigate(`/shop/${shop.id}`)}
-            >
-              <CardMedia
-                component="img"
-                height="200"
-                image={shop.image}
-                alt={shop.name}
-              />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography
-                  variant="h6"
-                  component="h2"
-                  gutterBottom
-                  sx={{ fontWeight: "bold" }}
-                >
-                  {shop.name}
-                </Typography>
-
-                <Box
-                  sx={{ display: "flex", alignItems: "center", mb: 1 }}
-                ></Box>
-
-                <Typography variant="body2" color="text.secondary" gutterBottom>
-                  {shop.description.length > 40
-                    ? shop.description.substring(0, 40) + "..."
-                    : shop.description}
-                </Typography>
-                {shop.description.length > 40 && (
-                  <Button
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigate(`/shop/${shop.id}`);
-                    }}
+      {!isLoadingShops && !isErrorShops && (
+        <>
+          <Grid container spacing={3}>
+            {filteredShops.length > 0 ? (
+              filteredShops.map((shop) => (
+                <Grid item xs={12} sm={6} md={4} key={shop._id || shop.id}>
+                  <Card
+                    elevation={3}
                     sx={{
-                      p: 0,
-                      minWidth: "auto",
-                      textTransform: "none",
-                      color: "primary.main",
+                      height: "100%",
+                      display: "flex",
+                      flexDirection: "column",
+                      transition: "transform 0.3s",
+                      "&:hover": {
+                        transform: "translateY(-5px)",
+                        boxShadow: 6,
+                      },
                     }}
                   >
-                    عرض المزيد
-                  </Button>
-                )}
+                    <CardMedia
+                      component="img"
+                      height="200"
+                      image={shop.logoUrl || shop.image || "https://picsum.photos/id/1011/400/250"}
+                      alt={shop.name}
+                      sx={{ objectFit: "cover" }}
+                    />
+                    <CardContent sx={{ flexGrow: 1 }}>
+                      <Typography
+                        gutterBottom
+                        variant="h5"
+                        component="h2"
+                        sx={{ fontWeight: "bold" }}
+                      >
+                        {shop.name}
+                      </Typography>
 
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <LocationOn
-                    sx={{ fontSize: 16, mr: 1, color: "text.secondary" }}
-                  />
-                  <Typography variant="body2">{shop.location}</Typography>
-                </Box>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          mb: 1,
+                          color: "text.secondary",
+                        }}
+                      >
+                        <LocationOn fontSize="small" sx={{ mr: 0.5 }} />
+                        <Typography variant="body2">{shop.city || shop.location}</Typography>
+                      </Box>
 
-                <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-                  <Store
-                    sx={{ fontSize: 16, mr: 1, color: "text.secondary" }}
-                  />
-                  <Typography variant="body2">
-                    تأسس في {shop.established}
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          mb: 1,
+                          color: "text.secondary",
+                        }}
+                      >
+                        <Phone fontSize="small" sx={{ mr: 0.5 }} />
+                        <Typography variant="body2">{shop.phone}</Typography>
+                      </Box>
+
+                      <Box sx={{ mb: 2 }}>
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          sx={{
+                            display: "-webkit-box",
+                            WebkitLineClamp:
+                              expandedDescriptions[shop._id || shop.id] ? "unset" : 2,
+                            WebkitBoxOrient: "vertical",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            mb: 1,
+                          }}
+                        >
+                          {shop.description}
+                        </Typography>
+                        {shop.description && shop.description.length > 100 && (
+                          <Button
+                            size="small"
+                            onClick={() =>
+                              setExpandedDescriptions((prev) => ({
+                                ...prev,
+                                [shop._id || shop.id]: !prev[shop._id || shop.id],
+                              }))
+                            }
+                            sx={{ p: 0, minWidth: "auto" }}
+                          >
+                            {expandedDescriptions[shop._id || shop.id]
+                              ? t("common.showLess", "عرض أقل")
+                              : t("common.showMore", "عرض المزيد")}
+                          </Button>
+                        )}
+                      </Box>
+
+                      <Divider sx={{ mb: 2 }} />
+
+                      <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                        {t("shops.services", "الخدمات")}:
+                      </Typography>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5, mb: 2 }}>
+                        {shop.services && shop.services.slice(0, 3).map((service, index) => (
+                          <Chip
+                            key={index}
+                            label={service}
+                            size="small"
+                            sx={{ mb: 0.5 }}
+                          />
+                        ))}
+                        {shop.services && shop.services.length > 3 && (
+                          <Chip
+                            label={`+${shop.services.length - 3}`}
+                            size="small"
+                            sx={{ mb: 0.5 }}
+                          />
+                        )}
+                      </Box>
+                    </CardContent>
+                    <CardActions sx={{ p: 2, pt: 0 }}>
+                      <Button
+                        size="medium"
+                        variant="contained"
+                        fullWidth
+                        onClick={() => navigate(`/shop/${shop._id || shop.id}`)}
+                        sx={{
+                          bgcolor: "primary.main",
+                          color: "white",
+                          "&:hover": { bgcolor: "primary.dark" },
+                        }}
+                      >
+                        {t("common.viewDetails", "عرض التفاصيل")}
+                      </Button>
+                    </CardActions>
+                  </Card>
+                </Grid>
+              ))
+            ) : (
+              <Grid item xs={12}>
+                <Paper elevation={2} sx={{ p: 4, textAlign: "center" }}>
+                  <Typography variant="h6" color="text.secondary">
+                    {t("shops.noResults", "لا توجد متاجر مطابقة لمعايير البحث")}
                   </Typography>
-                </Box>
-
-                <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                  <Star sx={{ fontSize: 16, mr: 1, color: "text.secondary" }} />
-                  <Typography variant="body2">{shop.workingHours}</Typography>
-                </Box>
-
-                <Divider sx={{ my: 1 }} />
-
-                <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap" }}>
-                  {shop.services.slice(0, 2).map((service, index) => (
-                    <Chip
-                      key={index}
-                      label={service}
-                      size="small"
-                      color="primary"
-                      sx={{ mr: 0.5, mb: 0.5 }}
-                    />
-                  ))}
-                  {shop.services.length > 2 && (
-                    <Chip
-                      label={`+${shop.services.length - 2}`}
-                      size="small"
-                      color="primary"
-                      sx={{ mr: 0.5, mb: 0.5 }}
-                    />
-                  )}
-                </Box>
-              </CardContent>
-              <style jsx>{`
-                .MuiCardContent-root {
-                  min-height: 220px;
-                }
-              `}</style>
-              <CardActions>
-                <Button size="small" color="primary" fullWidth>
-                  عرض التفاصيل
-                </Button>
-              </CardActions>
-            </Card>
+                </Paper>
+              </Grid>
+            )}
           </Grid>
-        ))}
-      </Grid>
-
-      {filteredShops.length === 0 && (
-        <Box sx={{ textAlign: "center", py: 8 }}>
-          <Typography variant="h6" color="text.secondary">
-            لم يتم العثور على محلات تطابق معايير البحث
-          </Typography>
-        </Box>
+          
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
+              <Pagination 
+                count={totalPages} 
+                page={page} 
+                onChange={handlePageChange} 
+                color="primary" 
+                size="large"
+                showFirstButton 
+                showLastButton
+              />
+            </Box>
+          )}
+        </>
       )}
     </Container>
   );

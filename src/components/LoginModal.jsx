@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -14,14 +14,40 @@ import {
 } from "@mui/material";
 import { Close, Phone, Lock } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
+import { useAuthContext } from "../contexts/AuthContext";
+import { useDialogContext } from "../contexts/DialogContext";
+
 
 const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
   const { t } = useTranslation();
+  const { showSuccess, showError } = useDialogContext();
+  const { 
+    login, 
+    loginLoading, 
+    loginError, 
+    requestOTP, 
+    requestOTPLoading, 
+    requestOTPError,
+    verifyOTP, 
+    verifyOTPLoading, 
+    verifyOTPError,
+    isAuthenticated 
+  } = useAuthContext();
+  
   const [step, setStep] = useState("phone"); // "phone", "otp", "success"
   const [phoneNumber, setPhoneNumber] = useState("");
   const [otp, setOtp] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  
+  // If user becomes authenticated, close modal and trigger success
+  useEffect(() => {
+    if (isAuthenticated && open) {
+      showSuccess(t("login.successfulLogin"), t("login.welcome"));
+      onSuccess();
+      handleClose();
+    }
+  }, [isAuthenticated, open, onSuccess, showSuccess, t]);
 
   const handlePhoneSubmit = async (e) => {
     e.preventDefault();
@@ -30,17 +56,13 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
       return;
     }
 
-    setLoading(true);
     setError("");
 
-    // Simulate API call to send OTP
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000)); // Simulate API delay
+      await requestOTP(phoneNumber);
       setStep("otp");
-      setLoading(false);
     } catch (err) {
-      setError(t("login.sendOtpError"));
-      setLoading(false);
+      setError(err.message || t("login.sendOtpError"));
     }
   };
 
@@ -51,30 +73,13 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
       return;
     }
 
-    setLoading(true);
     setError("");
 
-    // Simulate API call to verify OTP
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1500)); // Simulate API delay
-
-      // For demo purposes, accept any 4-digit OTP
-      if (otp.length === 4) {
-        setStep("success");
-        setLoading(false);
-
-        // Auto close success modal after 3 seconds
-        setTimeout(() => {
-          onSuccess();
-          handleClose();
-        }, 3000);
-      } else {
-        setError(t("login.invalidOtp"));
-        setLoading(false);
-      }
+      await verifyOTP({ phone: phoneNumber, otp });
+      // If verification is successful, the useEffect will handle the success
     } catch (err) {
-      setError(t("login.verifyOtpError"));
-      setLoading(false);
+      setError(err.message || t("login.verifyOtpError"));
     }
   };
 
@@ -82,8 +87,8 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
     setStep("phone");
     setPhoneNumber("");
     setOtp("");
+    setPassword("");
     setError("");
-    setLoading(false);
     onClose();
   };
 
@@ -160,14 +165,14 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || !phoneNumber}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
+            disabled={requestOTPLoading || !phoneNumber}
+            startIcon={requestOTPLoading ? <CircularProgress size={20} /> : null}
             sx={{
               backgroundColor: "#2e7d32",
               "&:hover": { backgroundColor: "#1b5e20" },
             }}
           >
-            {loading ? t("login.sending") : t("login.sendOtp")}
+            {requestOTPLoading ? t("login.sending") : t("login.sendOtp")}
           </Button>
         </DialogActions>
       </form>
@@ -242,14 +247,14 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={loading || otp.length !== 4}
-            startIcon={loading ? <CircularProgress size={20} /> : null}
+            disabled={verifyOTPLoading || otp.length !== 4}
+            startIcon={verifyOTPLoading ? <CircularProgress size={20} /> : null}
             sx={{
               backgroundColor: "#2e7d32",
               "&:hover": { backgroundColor: "#1b5e20" },
             }}
           >
-            {loading ? t("login.verifying") : t("login.verifyOtp")}
+            {verifyOTPLoading ? t("login.verifying") : t("login.verifyOtp")}
           </Button>
         </DialogActions>
       </form>
