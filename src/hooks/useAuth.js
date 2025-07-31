@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authAPI, updateApiToken } from '../services/api';
+import { storage } from '../utils/storage';
 import { useState, useEffect, useCallback } from 'react';
 
 const useAuth = () => {
@@ -13,8 +14,8 @@ const useAuth = () => {
     const initializeAuth = () => {
       try {
         console.log('🔐 Initializing auth state from localStorage...');
-        const token = localStorage.getItem('qafzh_auth_token');
-        const storedUserData = localStorage.getItem('qafzh_user_data');
+        const token = storage.getToken();
+        const storedUserData = storage.getUserData();
         
         if (token) {
           console.log('🔐 Found token in localStorage');
@@ -22,17 +23,11 @@ const useAuth = () => {
           setIsAuthenticated(true);
           
           if (storedUserData) {
-            try {
-              const parsedUserData = JSON.parse(storedUserData);
-              setUserData(parsedUserData);
-              console.log('🔐 User data loaded from localStorage');
-              
-              // Update query cache with user data
-              queryClient.setQueryData(['user', 'profile'], parsedUserData);
-            } catch (parseError) {
-              console.error('🔐 Error parsing user data:', parseError);
-              localStorage.removeItem('qafzh_user_data');
-            }
+            setUserData(storedUserData);
+            console.log('🔐 User data loaded from localStorage');
+            
+            // Update query cache with user data
+            queryClient.setQueryData(['user', 'profile'], storedUserData);
           }
         } else {
           console.log('🔐 No token found in localStorage');
@@ -49,30 +44,52 @@ const useAuth = () => {
     initializeAuth();
   }, [queryClient]);
 
+  // Helper function to save auth data
+  const saveAuthData = async (response) => {
+    try {
+      if (response?.data?.token) {
+        console.log('🔐 Saving token to storage and updating API...');
+        storage.setToken(response.data.token);
+        updateApiToken(response.data.token);
+      }
+      if (response?.data?.user) {
+        console.log('🔐 Saving user data to storage...');
+        storage.setUserData(response.data.user);
+        queryClient.setQueryData(['user', 'profile'], response.data.user);
+      }
+    } catch (error) {
+      console.error('🔐 Error saving auth data:', error);
+      throw error;
+    }
+  };
+
   // Register mutation
   const registerMutation = useMutation({
     mutationFn: (data) => authAPI.register(data),
     onSuccess: (response) => {
       console.log('🔐 Registration successful:', response);
     },
+    onError: (error) => {
+      console.error('🔐 Registration error:', error);
+    }
   });
 
   // Verify OTP mutation
   const verifyOTPMutation = useMutation({
     mutationFn: ({ phone, otp }) => authAPI.verifyOTP(phone, otp),
-    onSuccess: (response) => {
-      console.log('🔐 OTP verification successful:', response);
-      
-      if (response?.data?.token) {
-        updateApiToken(response.data.token);
+    onSuccess: async (response) => {
+      try {
+        console.log('🔐 OTP verification successful:', response);
+        await saveAuthData(response);
         setIsAuthenticated(true);
-      }
-      
-      if (response?.data?.user) {
         setUserData(response.data.user);
-        queryClient.setQueryData(['user', 'profile'], response.data.user);
+      } catch (error) {
+        console.error('🔐 Error in OTP success handler:', error);
       }
     },
+    onError: (error) => {
+      console.error('🔐 OTP verification error:', error);
+    }
   });
 
   // Request OTP mutation
@@ -81,24 +98,27 @@ const useAuth = () => {
     onSuccess: (response) => {
       console.log('🔐 OTP request successful:', response);
     },
+    onError: (error) => {
+      console.error('🔐 OTP request error:', error);
+    }
   });
 
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: (data) => authAPI.login(data),
-    onSuccess: (response) => {
-      console.log('🔐 Login successful:', response);
-      
-      if (response?.data?.token) {
-        updateApiToken(response.data.token);
+    onSuccess: async (response) => {
+      try {
+        console.log('🔐 Login successful:', response);
+        await saveAuthData(response);
         setIsAuthenticated(true);
-      }
-      
-      if (response?.data?.user) {
         setUserData(response.data.user);
-        queryClient.setQueryData(['user', 'profile'], response.data.user);
+      } catch (error) {
+        console.error('🔐 Error in login success handler:', error);
       }
     },
+    onError: (error) => {
+      console.error('🔐 Login error:', error);
+    }
   });
 
   // Logout mutation
@@ -115,6 +135,13 @@ const useAuth = () => {
       // Invalidate all queries to force refetch when needed
       queryClient.invalidateQueries();
     },
+    onError: (error) => {
+      console.error('🔐 Logout error:', error);
+      // Even if logout API fails, clear local state
+      setIsAuthenticated(false);
+      setUserData(null);
+      queryClient.removeQueries(['user']);
+    }
   });
 
   // Get user profile query
@@ -126,7 +153,7 @@ const useAuth = () => {
       console.log('🔐 Profile fetch successful:', response);
       if (response?.data) {
         setUserData(response.data);
-        localStorage.setItem('qafzh_user_data', JSON.stringify(response.data));
+        storage.setUserData(response.data);
       }
     },
     onError: (error) => {
@@ -135,13 +162,26 @@ const useAuth = () => {
       if (error?.status === 401) {
         setIsAuthenticated(false);
         setUserData(null);
-        localStorage.removeItem('qafzh_auth_token');
-        localStorage.removeItem('qafzh_user_data');
+        storage.clearAuthData();
         updateApiToken(null);
       }
     },
     retry: false, // Don't retry on error
   });
+
+  // Check if user is truly authenticated (has valid token)
+  const checkAuthStatus = useCallback(() => {
+    const token = storage.getToken();
+    const hasToken = !!token;
+    
+    console.log('🔐 Checking auth status:', {
+      hasToken,
+      isAuthenticated,
+      hasUserData: !!userData
+    });
+    
+    return hasToken && isAuthenticated;
+  }, [isAuthenticated, userData]);
 
   // Logout function
   const logout = useCallback(() => {
@@ -150,25 +190,40 @@ const useAuth = () => {
 
   return {
     isInitialized,
-    isAuthenticated,
+    isAuthenticated: checkAuthStatus(),
     userData,
+    token: storage.getToken(),
+    
+    // Register
     register: registerMutation.mutate,
     registerLoading: registerMutation.isPending,
     registerError: registerMutation.error,
+    
+    // OTP
     verifyOTP: verifyOTPMutation.mutate,
     verifyOTPLoading: verifyOTPMutation.isPending,
     verifyOTPError: verifyOTPMutation.error,
+    
     requestOTP: requestOTPMutation.mutate,
     requestOTPLoading: requestOTPMutation.isPending,
     requestOTPError: requestOTPMutation.error,
+    
+    // Login
     login: loginMutation.mutate,
     loginLoading: loginMutation.isPending,
     loginError: loginMutation.error,
+    
+    // Logout
     logout,
     logoutLoading: logoutMutation.isPending,
+    
+    // Profile
     profileLoading: profileQuery.isLoading,
     profileError: profileQuery.error,
     profileRefetch: profileQuery.refetch,
+    
+    // Utility
+    checkAuthStatus,
   };
 };
 

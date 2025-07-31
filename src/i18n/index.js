@@ -298,7 +298,18 @@ const resources = {
       "register.continue": "متابعة",
       "register.haveAccount": "لديك حساب بالفعل؟",
       "register.loginHere": "سجل دخول هنا",
+
+
+      "ads.active": "مفعل",
+      "ads.inactive": "غير مفعل",
+      "ads.noneFound": "لم يتم العثور على إعلانات",
+      "ads.viewDetails": "عرض التفاصيل",
+      "ads.call": "اتصل",
+      "ads.open": "فتح",
+      "ads.edit": "تعديل",
+      "ads.shopAds": "إعلانات المحلات",
     },
+  
   },
   en: {
     translation: {
@@ -598,6 +609,14 @@ const resources = {
       "register.continue": "Continue",
       "register.haveAccount": "Already have an account?",
       "register.loginHere": "Login here",
+      "ads.active": "Active",
+      "ads.inactive": "Inactive",
+      "ads.noneFound": "No ads found",
+      "ads.viewDetails": "View Details",
+      "ads.call": "Call",
+      "ads.open": "Open",
+      "ads.edit": "Edit",
+      "ads.shopAds": "Shop Ads",
     },
   },
 };

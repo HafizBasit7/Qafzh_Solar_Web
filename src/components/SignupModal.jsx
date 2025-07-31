@@ -12,9 +12,9 @@ import {
   CircularProgress,
   Link,
 } from "@mui/material";
-import { Close, Phone, Lock, PersonAdd } from "@mui/icons-material";
+import { Close, Phone, Lock, PersonAdd, Person, LockReset } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-import { useAuthContext } from "../contexts/AuthContext";
+import  useAuth  from "../hooks/useAuth"; 
 import { useDialogContext } from "../contexts/DialogContext";
 
 const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
@@ -24,17 +24,18 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
     register, 
     registerLoading, 
     registerError, 
-    requestOTP, 
-    requestOTPLoading, 
-    requestOTPError,
     verifyOTP, 
     verifyOTPLoading, 
     verifyOTPError,
     isAuthenticated 
-  } = useAuthContext();
+  } = useAuth();
   
-  const [step, setStep] = useState("phone"); // "phone", "otp", "success"
-  const [phoneNumber, setPhoneNumber] = useState("");
+  const [step, setStep] = useState("register"); // "register", "otp", "success"
+  const [formData, setFormData] = useState({
+    name: "",
+    phone: "",
+    password: ""
+  });
   const [otp, setOtp] = useState("");
   const [error, setError] = useState("");
   
@@ -47,26 +48,31 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
     }
   }, [isAuthenticated, open, onSuccess, showSuccess, t]);
 
-  const handlePhoneSubmit = async (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    if (!phoneNumber || phoneNumber.length < 8) {
-      setError(t("signup.invalidPhone"));
+    if (!formData.name || !formData.phone || !formData.password) {
+      setError(t("signup.fillAllFields"));
+      return;
+    }
+
+    if (formData.password.length < 8) {
+      setError(t("signup.passwordLength"));
       return;
     }
 
     setError("");
 
     try {
-      await requestOTP(phoneNumber);
+      await register(formData);
       setStep("otp");
     } catch (err) {
-      setError(err.message || t("signup.sendOtpError"));
+      setError(err.message || t("signup.registrationError"));
     }
   };
 
   const handleOtpSubmit = async (e) => {
     e.preventDefault();
-    if (!otp || otp.length !== 4) {
+    if (!otp || otp.length !== 6) {
       setError(t("signup.invalidOtp"));
       return;
     }
@@ -74,24 +80,34 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
     setError("");
 
     try {
-      // First verify OTP, then register the user
-      await verifyOTP({ phone: phoneNumber, otp });
-      await register({ phone: phoneNumber });
-      // If registration is successful, the useEffect will handle the success
+      await verifyOTP({ phone: formData.phone, otp });
+      // If verification is successful, the useEffect will handle the success
     } catch (err) {
       setError(err.message || t("signup.verifyOtpError"));
     }
   };
 
   const handleClose = () => {
-    setStep("phone");
-    setPhoneNumber("");
+    setStep("register");
+    setFormData({
+      name: "",
+      phone: "",
+      password: ""
+    });
     setOtp("");
     setError("");
     onClose();
   };
 
-  const renderPhoneStep = () => (
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const renderRegisterStep = () => (
     <>
       <DialogTitle
         sx={{
@@ -107,10 +123,10 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
           <Close />
         </Button>
       </DialogTitle>
-      <form onSubmit={handlePhoneSubmit}>
+      <form onSubmit={handleRegisterSubmit}>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            {t("register.phoneDescription")}
+            {t("register.registerDescription")}
           </Typography>
 
           {error && (
@@ -121,18 +137,64 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
 
           <TextField
             fullWidth
-            label={t("register.phoneNumber")}
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder={t("register.phonePlaceholder")}
-            type="tel"
+            name="name"
+            label={t("register.name")}
+            value={formData.name}
+            onChange={handleInputChange}
+            placeholder={t("register.namePlaceholder")}
             InputProps={{
               startAdornment: (
-                <PersonAdd sx={{ mr: 1, color: "text.secondary" }} />
+                <Person sx={{ mr: 1, color: "text.secondary" }} />
               ),
             }}
             sx={{ mb: 2 }}
           />
+
+          <TextField
+            fullWidth
+            name="phone"
+            label={t("register.phoneNumber")}
+            value={formData.phone}
+            onChange={handleInputChange}
+            placeholder={t("register.phonePlaceholder")}
+            type="tel"
+            InputProps={{
+              startAdornment: (
+                <Phone sx={{ mr: 1, color: "text.secondary" }} />
+              ),
+            }}
+            sx={{ mb: 2 }}
+          />
+
+          <TextField
+            fullWidth
+            name="password"
+            label={t("register.password")}
+            value={formData.password}
+            onChange={handleInputChange}
+            type="password"
+            placeholder={t("register.passwordPlaceholder")}
+            InputProps={{
+              startAdornment: (
+                <Lock sx={{ mr: 1, color: "text.secondary" }} />
+              ),
+            }}
+            sx={{ mb: 2 }}
+          />
+
+          <Box sx={{ textAlign: "center", mt: 2 }}>
+            <Typography variant="body2" color="text.secondary">
+              {t("register.alreadyHaveAccount")}{" "}
+              <Link
+                component="button"
+                type="button"
+                onClick={onOpenLogin}
+                sx={{ fontWeight: "bold" }}
+              >
+                {t("register.login")}
+              </Link>
+            </Typography>
+          </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
           <Button onClick={handleClose} variant="outlined">
@@ -141,14 +203,14 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={requestOTPLoading || !phoneNumber}
-            startIcon={requestOTPLoading ? <CircularProgress size={20} /> : null}
+            disabled={registerLoading || !formData.name || !formData.phone || !formData.password}
+            startIcon={registerLoading ? <CircularProgress size={20} /> : null}
             sx={{
               backgroundColor: "#2e7d32",
               "&:hover": { backgroundColor: "#1b5e20" },
             }}
           >
-            {requestOTPLoading ? t("signup.sending") : t("signup.sendOtp")}
+            {registerLoading ? t("signup.registering") : t("signup.register")}
           </Button>
         </DialogActions>
       </form>
@@ -174,7 +236,7 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
       <form onSubmit={handleOtpSubmit}>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            {t("register.otpDescription", { phone: phoneNumber })}
+            {t("register.otpDescription", { phone: formData.phone })}
           </Typography>
 
           {error && (
@@ -188,12 +250,12 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
             label={t("register.otp")}
             value={otp}
             onChange={(e) =>
-              setOtp(e.target.value.replace(/\D/g, "").slice(0, 4))
+              setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
             }
-            placeholder="1234"
+            placeholder="112233"
             type="text"
             inputProps={{
-              maxLength: 4,
+              maxLength: 6,
               style: {
                 textAlign: "center",
                 fontSize: "1.5rem",
@@ -201,7 +263,7 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
               },
             }}
             InputProps={{
-              startAdornment: <Lock sx={{ mr: 1, color: "text.secondary" }} />,
+              startAdornment: <LockReset sx={{ mr: 1, color: "text.secondary" }} />,
             }}
             sx={{ mb: 2 }}
           />
@@ -209,10 +271,10 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
           <Box sx={{ textAlign: "center", mt: 2 }}>
             <Button
               variant="text"
-              onClick={() => setStep("phone")}
+              onClick={() => setStep("register")}
               sx={{ color: "text.secondary" }}
             >
-              {t("register.changePhone")}
+              {t("register.changeDetails")}
             </Button>
           </Box>
         </DialogContent>
@@ -223,62 +285,17 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={verifyOTPLoading || registerLoading || otp.length !== 4}
-            startIcon={(verifyOTPLoading || registerLoading) ? <CircularProgress size={20} /> : null}
+            disabled={verifyOTPLoading || otp.length !== 6}
+            startIcon={verifyOTPLoading ? <CircularProgress size={20} /> : null}
             sx={{
               backgroundColor: "#2e7d32",
               "&:hover": { backgroundColor: "#1b5e20" },
             }}
           >
-            {(verifyOTPLoading || registerLoading) ? t("signup.verifying") : t("signup.verifyOtp")}
+            {verifyOTPLoading ? t("signup.verifying") : t("signup.verifyOtp")}
           </Button>
         </DialogActions>
       </form>
-    </>
-  );
-
-  const renderSuccessStep = () => (
-    <>
-      <DialogTitle
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-        }}
-      >
-        <Typography variant="h6" sx={{ fontWeight: "bold", color: "#2e7d32" }}>
-          {t("register.success")}
-        </Typography>
-        <Button onClick={handleClose} sx={{ minWidth: "auto", p: 0 }}>
-          <Close />
-        </Button>
-      </DialogTitle>
-      <DialogContent>
-        <Box sx={{ textAlign: "center", py: 2 }}>
-          <Typography variant="h4" sx={{ color: "#2e7d32", mb: 2 }}>
-            🎉
-          </Typography>
-          <Typography variant="h6" sx={{ mb: 2 }}>
-            {t("register.accountCreated")}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {t("register.successDescription")}
-          </Typography>
-        </Box>
-      </DialogContent>
-      <DialogActions sx={{ p: 3, pt: 0 }}>
-        <Button
-          onClick={handleClose}
-          variant="contained"
-          fullWidth
-          sx={{
-            backgroundColor: "#2e7d32",
-            "&:hover": { backgroundColor: "#1b5e20" },
-          }}
-        >
-          {t("register.continue")}
-        </Button>
-      </DialogActions>
     </>
   );
 
@@ -294,9 +311,8 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
         },
       }}
     >
-      {step === "phone" && renderPhoneStep()}
+      {step === "register" && renderRegisterStep()}
       {step === "otp" && renderOtpStep()}
-      {step === "success" && renderSuccessStep()}
     </Dialog>
   );
 };

@@ -1,5 +1,7 @@
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { storage } from '../utils/storage';
+import { uploadAPI } from '../utils/imageUpload';
 
 // Base URL for API requests
 // const BASE_URL = 'https://srv694651.hstgr.cloud/solar/api/v1';
@@ -42,7 +44,7 @@ export const updateApiToken = (token) => {
 const initializeToken = () => {
   try {
     console.log('🔐 Initializing token from storage...');
-    const token = localStorage.getItem('qafzh_auth_token');
+    const token = storage.getToken();
     if (token) {
       console.log('🔐 Found token in storage, setting up auth');
       updateApiToken(token);
@@ -69,9 +71,12 @@ api.interceptors.request.use(
         initializeToken();
       }
 
-      // Token is already set in default headers by updateApiToken
-      const hasAuth = config.headers.Authorization || api.defaults.headers.common['Authorization'];
-      console.log('🔐 Request interceptor - Token present:', !!hasAuth);
+      // Get fresh token from storage for each request
+      const token = storage.getToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+        console.log('🔐 Request interceptor - Token added to request');
+      }
       
       return config;
     } catch (error) {
@@ -100,8 +105,7 @@ api.interceptors.response.use(
       
       try {
         // Clear expired token
-        localStorage.removeItem('qafzh_auth_token');
-        localStorage.removeItem('qafzh_user_data');
+        storage.clearAuthData();
         updateApiToken(null);
         
         // Redirect to login - you might want to use navigation service here
@@ -134,9 +138,9 @@ api.interceptors.response.use(
 );
 
 // Auth API
-// Auth API
 export const authAPI = {
   register: (data) => api.post("/auth/register", data),
+  
   verifyOTP: async (phone, otp) => {
     try {
       console.log('🔐 API verifyOTP starting...');
@@ -146,12 +150,12 @@ export const authAPI = {
       // Save token and user data if verification is successful
       if (response?.data?.token) {
         console.log('🔐 OTP verified, saving token and updating axios...');
-        await storage.setToken(response.data.token);
-        await updateApiToken(response.data.token);
+        storage.setToken(response.data.token);
+        updateApiToken(response.data.token);
         console.log('🔐 Token saved and axios updated after OTP verification');
       }
       if (response?.data?.user) { 
-        await storage.setUserData(response.data.user);
+        storage.setUserData(response.data.user);
         console.log('🔐 User data saved after OTP verification');
       }
 
@@ -161,27 +165,24 @@ export const authAPI = {
       throw error;
     }
   },
+  
   requestOTP: (phone) => api.post("/auth/request-otp", { phone }),
+  
   login: async (data) => {
-   
     try {
       console.log('🔐 API login starting...');
-      // Expecting { phone, password }
       const response = await api.post("/auth/login", data);
       console.log('🔐 API login response received');
 
-      // Backend returns: { status: 200, data: { user: {...}, token: "..." }, message: "..." }
-      // Response interceptor returns response.data, so we have: { status: 200, data: { user: {...}, token: "..." }, message: "..." }
-      
       // Save token and user data and immediately update axios
       if (response?.data?.token) {
         console.log('🔐 Saving token and updating axios...');
-        await storage.setToken(response.data.token);
-        await updateApiToken(response.data.token); // This sets the token in axios immediately
+        storage.setToken(response.data.token);
+        updateApiToken(response.data.token);
         console.log('🔐 Token saved and axios updated successfully');
       }
       if (response?.data?.user) { 
-        await storage.setUserData(response.data.user);
+        storage.setUserData(response.data.user);
         console.log('🔐 User data saved successfully');
       }
 
@@ -191,27 +192,30 @@ export const authAPI = {
       throw error;
     }
   },
+  
   logout: async () => {
     try {
       console.log('🔐 API logout starting...');
       const response = await api.post("/auth/logout");
       // Always clear local storage and token cache regardless of API response
-      await storage.clearAuthData();
-      await updateApiToken(null);
+      storage.clearAuthData();
+      updateApiToken(null);
       console.log('🔐 Logout completed, token cleared');
       return response;
     } catch (error) {
       // Clear local storage and token cache even if API call fails
       console.log('🔐 Logout API failed, clearing token anyway');
-      await storage.clearAuthData();
-      await updateApiToken(null);
+      storage.clearAuthData();
+      updateApiToken(null);
       throw error;
     }
   },
+  
   getProfile: () => {
     console.log('🔐 Getting profile, current auth header:', api.defaults.headers.common['Authorization'] ? 'present' : 'missing');
     return api.get("/auth/profile");
   },
+  
   updateProfile: (data) => {
     console.log('🔐 Updating profile, current auth header:', api.defaults.headers.common['Authorization'] ? 'present' : 'missing');
     return api.put("/auth/update-profile", data);
@@ -222,7 +226,6 @@ export const authAPI = {
 export const productsAPI = {
   getProducts: (params) => api.get("/marketplace/browse-products", { params }),
 
-  // Enhanced search with filters and keywords
   searchProducts: (params) => api.get("/marketplace/search-products", { params }),
 
   filterProducts: (params) => api.get("/marketplace/filters-product", { params }),
@@ -237,18 +240,21 @@ export const productsAPI = {
 
   getUserProducts: (params = {}) => {
     console.log('🔐 Getting user products, current auth header:', api.defaults.headers.common['Authorization'] ? 'present' : 'missing');
-    console.log('🔐 Getting products from token (no userId needed)');
     return api.get(`/products/user-products`, { params });
   },
+  
   updateProduct: (id, data) => {
     console.log('🔐 Updating product, current auth header:', api.defaults.headers.common['Authorization'] ? 'present' : 'missing');
-    return api.patch(`/products/update-products${id}`, data);
+    return api.patch(`/products/update-products/${id}`, data);
   },
+  
   deleteProduct: (id) => {
     console.log('🔐 Deleting product, current auth header:', api.defaults.headers.common['Authorization'] ? 'present' : 'missing');
     return api.delete(`/products/delete-product/${id}`);
   },
+  
   likeProduct: (id) => api.post(`/products/${id}/like`),
+  
   unlikeProduct: (id) => api.delete(`/products/${id}/like`),
 };
 
@@ -276,7 +282,7 @@ export const getAllAds = async () => {
   try {
     const response = await axios.get(`${BASE_URL}/marketplace/getAllAds`);
     return {
-      data: response.data.data || [], // Access nested data property
+      data: response.data.data || [],
       total: response.data.total || 0,
       message: response.data.message || '',
       status: response.data.status || 200
@@ -296,7 +302,6 @@ export const searchAPI = {
   searchAll: async (params) => {
     const { search_keyword, ...filters } = params;
     
-    // If no search keyword, return empty results
     if (!search_keyword?.trim()) {
       return {
         products: { data: [], total: 0 },
@@ -307,7 +312,6 @@ export const searchAPI = {
     }
 
     try {
-      // Make parallel requests for all content types
       const [productsRes, engineersRes, shopsRes, adsRes] = await Promise.allSettled([
         productsAPI.searchProducts({ search_keyword, ...filters }),
         engineersAPI.searchEngineers({ search_keyword, ...filters }),

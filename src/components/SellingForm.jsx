@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -13,11 +13,11 @@ import {
   Box,
   Typography,
   Grid,
-  Chip,
   IconButton,
   InputAdornment,
   Alert,
-  Switch, // Added Switch import
+  Switch,
+  CircularProgress,
 } from "@mui/material";
 import {
   Close,
@@ -28,18 +28,27 @@ import {
 import { useTranslation } from "react-i18next";
 import LoginModal from "./LoginModal";
 import SignupModal from "./SignupModal";
+import { useAuthContext } from "../contexts/AuthContext";
+import { productsAPI } from "../services/api";
+import { storage } from "../utils/storage";
+import { useProducts } from "../hooks/useProducts";
+import { uploadAPI } from "../utils/imageUpload";
 
 const SellingForm = ({ open, onClose }) => {
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const { t } = useTranslation();
+  const { isAuthenticated, userData, checkAuthStatus } = useAuthContext();
+
   const [formData, setFormData] = useState({
-    name: '', // Added product name field
-    productType: "",
-    productCondition: "",
+    name: '',
+    type: "",
+    condition: "",
     brand: "",
     model: "",
     price: "",
     currency: "YER",
-    phoneNumber: "",
+    phone: "",
     whatsappPhone: "",
     governorate: "",
     city: "",
@@ -53,74 +62,63 @@ const SellingForm = ({ open, onClose }) => {
     },
     isNegotiable: true,
     isActive: true,
-    featured: false,
-    status: 'pending' // Added status field
+    isFeatured: false,
+    status: 'pending'
   });
 
   const [errors, setErrors] = useState({});
   const [imageFiles, setImageFiles] = useState([]);
   const [loginModalOpen, setLoginModalOpen] = useState(false);
   const [signupModalOpen, setSignupModalOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Check authentication when component opens
+  useEffect(() => {
+    if (open) {
+      console.log('🔐 SellingForm opened, checking auth status...');
+      console.log('🔐 Auth status:', { isAuthenticated, hasUserData: !!userData, hasToken: !!storage.getToken() });
+
+      const isReallyAuthenticated = checkAuthStatus();
+
+      if (isReallyAuthenticated) {
+        console.log('🔐 User is authenticated, showing form');
+        setShowForm(true);
+        setLoginModalOpen(false);
+
+        // Pre-fill user data if available
+        if (userData?.phone) {
+          setFormData(prev => ({
+            ...prev,
+            phoneNumber: userData.phone
+          }));
+        }
+      } else {
+        console.log('🔐 User not authenticated, showing login modal');
+        setShowForm(false);
+        setLoginModalOpen(true);
+      }
+    }
+  }, [open, isAuthenticated, userData, checkAuthStatus]);
 
   // Yemeni governorates
   const governorates = [
-    "Sana'a",
-    "Aden",
-    "Taiz",
-    "Al Hudaydah",
-    "Ibb",
-    "Dhamar",
-    "Al Mahwit",
-    "Raymah",
-    "Al Jawf",
-    "Marib",
-    "Al Bayda",
-    "Shabwah",
-    "Hadramaut",
-    "Al Mahrah",
-    "Sa'dah",
-    "Hajjah",
-    "Amran",
-    "Lahij",
-    "Abyan",
-    "Al Dhale'e",
+    "Sana'a", "Aden", "Taiz", "Al Hudaydah", "Ibb", "Dhamar",
+    "Al Mahwit", "Raymah", "Al Jawf", "Marib", "Al Bayda",
+    "Shabwah", "Hadramaut", "Al Mahrah", "Sa'dah", "Hajjah",
+    "Amran", "Lahij", "Abyan", "Al Dhale'e",
   ];
 
   // Common solar product brands
   const commonBrands = [
-    "SMA",
-    "Fronius",
-    "Sungrow",
-    "Growatt",
-    "Solis",
-    "Victron Energy",
-    "Schneider Electric",
-    "ABB",
-    "Delta",
-    "Kaco",
-    "Canadian Solar",
-    "Jinko Solar",
-    "Trina Solar",
-    "Longi",
-    "JA Solar",
-    "Hanwha Q-Cells",
-    "LG Solar",
-    "Panasonic",
-    "SunPower",
-    "First Solar",
-    "Other",
+    "SMA", "Fronius", "Sungrow", "Growatt", "Solis", "Victron Energy",
+    "Schneider Electric", "ABB", "Delta", "Kaco", "Canadian Solar",
+    "Jinko Solar", "Trina Solar", "Longi", "JA Solar", "Hanwha Q-Cells",
+    "LG Solar", "Panasonic", "SunPower", "First Solar", "Other",
   ];
 
-  const productTypes = [
-    "Inverter",
-    "Panel",
-    "Battery",
-    "Cables",
-    "Controller",
-    "Full Kit",
-    "Others",
-  ];
-
+  // Update these arrays to match your Postman values
+  const productTypes = ["Inverter", "Panel", "Battery", "Cables", "Controller", "Full Kit", "Others"];
   const productConditions = ["New", "Used", "Needs Repair"];
 
   const currencies = [
@@ -149,25 +147,47 @@ const SellingForm = ({ open, onClose }) => {
     handleInputChange("price", numericValue);
   };
 
-  const handleImageUpload = (event) => {
-    const files = Array.from(event.target.files);
-    const validFiles = files.filter((file) => {
+  const handleImageUpload = async (event) => {
+    const files = Array.from(event.target.files); // Convert FileList to array
+    
+    // Validate files
+    const validFiles = files.filter(file => {
       const isValidType = file.type.startsWith("image/");
       const isValidSize = file.size <= 5 * 1024 * 1024; // 5MB limit
       return isValidType && isValidSize;
     });
-
+  
     if (validFiles.length + imageFiles.length > 5) {
       alert("Maximum 5 images allowed");
       return;
     }
+  
+    // Upload images and get URLs
+    try {
+      setIsUploading(true);
+      const uploadPromises = validFiles.map(file => uploadAPI.uploadImage(file));
+      const uploadedUrls = await Promise.all(uploadPromises);
+      
+      // Update state with both the File objects and their URLs
+      setImageFiles(prev => [
+        ...prev,
+        ...validFiles.map((file, index) => ({
+          file,
+          fileUrl: uploadedUrls[index].fileUrl,
 
-    setImageFiles((prev) => [...prev, ...validFiles]);
+          preview: URL.createObjectURL(file)
+        }))
+      ]);
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      alert('Failed to upload some images. Please try again.');
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
   };
 
   const handleCameraCapture = () => {
-    // This would typically use a camera API
-    // For now, we'll simulate by opening file input
     document.getElementById("camera-input").click();
   };
 
@@ -178,14 +198,14 @@ const SellingForm = ({ open, onClose }) => {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.name) {
+    if (!formData.name?.trim()) {
       newErrors.name = "Product name is required";
     }
-    if (!formData.productType) {
-      newErrors.productType = "Product type is required";
+    if (!formData.type) {
+      newErrors.type = "Product type is required";
     }
-    if (!formData.productCondition) {
-      newErrors.productCondition = "Product condition is required";
+    if (!formData.condition) {
+      newErrors.condition = "Product condition is required";
     }
     if (!formData.brand) {
       newErrors.brand = "Brand is required";
@@ -193,10 +213,10 @@ const SellingForm = ({ open, onClose }) => {
     if (!formData.price) {
       newErrors.price = "Price is required";
     }
-    if (!formData.phoneNumber) {
-      newErrors.phoneNumber = "Phone number is required";
-    } else if (!/^[0-9+\-\s()]{8,}$/.test(formData.phoneNumber)) {
-      newErrors.phoneNumber = "Please enter a valid phone number";
+    if (!formData.phone || formData.phone.trim() === '') {
+      newErrors.phone = "Phone number is required";
+    } else if (!/^[0-9]{8,15}$/.test(formData.phone)) {
+      newErrors.phone = "Please enter a valid phone number (digits only, 8-15 characters)";
     }
     if (formData.whatsappPhone && !/^[0-9+\-\s()]{8,}$/.test(formData.whatsappPhone)) {
       newErrors.whatsappPhone = "Please enter a valid WhatsApp number";
@@ -212,30 +232,82 @@ const SellingForm = ({ open, onClose }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (validateForm()) {
-      // Here you would typically send the data to your backend
-      console.log("Form data:", formData);
-      console.log("Image files:", imageFiles);
+  const {
+    createProduct,
+    isCreating,
+    createProductError
+  } = useProducts();
 
-      // Close the selling form and open the login modal
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+  
+    if (!validateForm()) return;
+  
+    setIsSubmitting(true);
+  
+    try {
+      const token = storage.getToken();
+      if (!token) {
+        throw new Error('Authentication token not found');
+      }
+  
+      // Extract URLs directly from already uploaded images
+      const imageUrls = imageFiles.map(item => item.fileUrl); // ✅ Correct — just the string URLs
+
+  
+      // Prepare product data
+      const productData = {
+        name: formData.name.trim(),
+        description: formData.description.trim(),
+        type: formData.type,
+        condition: formData.condition,
+        brand: formData.brand,
+        model: formData.model || '',
+        price: Number(formData.price),
+        currency: formData.currency,
+        phone: formData.phone,
+        whatsappPhone: formData.whatsappPhone || '',
+        governorate: formData.governorate,
+        city: formData.city || '',
+        locationText: formData.locationText || '',
+        specifications: {
+          power: formData.specifications.power || '',
+          voltage: formData.specifications.voltage || '',
+          capacity: formData.specifications.capacity || '',
+          warranty: formData.specifications.warranty || ''
+        },
+        status: formData.status,
+        isNegotiable: Boolean(formData.isNegotiable),
+        isActive: Boolean(formData.isActive),
+        featured: Boolean(formData.isFeatured),
+        images: imageUrls // ←✅ already uploaded URLs
+      };
+  
+      // Submit product data as JSON
+      await createProduct(productData);
+  
+      // Reset on success
+      resetForm();
       onClose();
-      setLoginModalOpen(true);
+    } catch (error) {
+      console.error('❌ Submission error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+  
+  
 
-  const handleLoginSuccess = () => {
-    // Reset form data after successful login and product listing
+  const resetForm = () => {
     setFormData({
       name: '',
-      productType: "",
-      productCondition: "",
+      type: "",
+      condition: "",
       brand: "",
       model: "",
-      price: "",  
+      price: "",
       currency: "YER",
-      phoneNumber: "",
+      phone: userData?.phone || "",
       whatsappPhone: "",
       governorate: "",
       city: "",
@@ -249,15 +321,29 @@ const SellingForm = ({ open, onClose }) => {
       },
       isNegotiable: true,
       isActive: true,
-      featured: false,
-      status: 'pending' 
+      isFeatured: false,
+      status: 'pending'
     });
     setErrors({});
     setImageFiles([]);
   };
 
+  const handleLoginSuccess = () => {
+    console.log('🔐 Login successful in SellingForm');
+    setLoginModalOpen(false);
+    setShowForm(true);
+
+    // Pre-fill user data if available
+    if (userData?.phone) {
+      setFormData(prev => ({
+        ...prev,
+        phone: userData.phone
+      }));
+    }
+  };
+
   const handleSignupSuccess = () => {
-    // After successful signup, open login modal
+    console.log('🔐 Signup successful, opening login modal');
     setSignupModalOpen(false);
     setLoginModalOpen(true);
   };
@@ -268,40 +354,23 @@ const SellingForm = ({ open, onClose }) => {
   };
 
   const handleClose = () => {
-    setFormData({
-      name: '', // Added product name field
-      productType: "",
-      productCondition: "",
-      brand: "",
-      model: "",
-      price: "",
-      currency: "YER",
-      phoneNumber: "",
-      whatsappPhone: "",
-      governorate: "",
-      city: "",
-      locationText: "",
-      description: "",
-      images: [],
-      specifications: {
-        power: "",
-        voltage: "",
-        warranty: ""
-      },
-      isNegotiable: true,
-      isActive: true,
-      featured: false,
-      status: 'pending' 
-    });
-    setErrors({});
-    setImageFiles([]);
+    resetForm();
+    setShowForm(false);
+    setLoginModalOpen(false);
+    setSignupModalOpen(false);
     onClose();
   };
 
+  // Don't render the form if not authenticated
+  if (open && !showForm && !loginModalOpen && !signupModalOpen) {
+    return null;
+  }
+
   return (
     <>
+      {/* Main Selling Form Dialog */}
       <Dialog
-        open={open}
+        open={open && showForm}
         onClose={handleClose}
         maxWidth="md"
         fullWidth
@@ -331,8 +400,15 @@ const SellingForm = ({ open, onClose }) => {
 
         <form onSubmit={handleSubmit}>
           <DialogContent sx={{ pt: 3 }}>
+            {/* Authentication Status Alert */}
+            {!checkAuthStatus() && (
+              <Alert severity="warning" sx={{ mb: 2 }}>
+                You must be logged in to post a product. Please login to continue.
+              </Alert>
+            )}
+
             <Grid container spacing={3}>
-              {/* Product Name (New) */}
+              {/* Product Name */}
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -350,14 +426,14 @@ const SellingForm = ({ open, onClose }) => {
               <Grid item xs={12} md={6}>
                 <FormControl
                   fullWidth
-                  error={!!errors.productType}
+                  error={!!errors.type}
                   sx={{ minWidth: 140 }}
                 >
                   <InputLabel>{t("selling.productType")}</InputLabel>
                   <Select
-                    value={formData.productType}
+                    value={formData.type}
                     onChange={(e) =>
-                      handleInputChange("productType", e.target.value)
+                      handleInputChange("type", e.target.value)
                     }
                     label={t("selling.productType")}
                   >
@@ -367,9 +443,9 @@ const SellingForm = ({ open, onClose }) => {
                       </MenuItem>
                     ))}
                   </Select>
-                  {errors.productType && (
+                  {errors.type && (
                     <Typography color="error" variant="caption">
-                      {errors.productType}
+                      {errors.type}
                     </Typography>
                   )}
                 </FormControl>
@@ -379,16 +455,16 @@ const SellingForm = ({ open, onClose }) => {
               <Grid item xs={12} md={6}>
                 <FormControl
                   fullWidth
-                  error={!!errors.productCondition}
+                  error={!!errors.condition}
                   sx={{ minWidth: 140 }}
                 >
-                  <InputLabel>{t("selling.productCondition")}</InputLabel>
+                  <InputLabel>{t("selling.condition")}</InputLabel>
                   <Select
-                    value={formData.productCondition}
+                    value={formData.condition}
                     onChange={(e) =>
-                      handleInputChange("productCondition", e.target.value)
+                      handleInputChange("condition", e.target.value)
                     }
-                    label={t("selling.productCondition")}
+                    label={t("selling.condition")}
                   >
                     {productConditions.map((condition) => (
                       <MenuItem key={condition} value={condition}>
@@ -396,9 +472,9 @@ const SellingForm = ({ open, onClose }) => {
                       </MenuItem>
                     ))}
                   </Select>
-                  {errors.productCondition && (
+                  {errors.condition && (
                     <Typography color="error" variant="caption">
-                      {errors.productCondition}
+                      {errors.condition}
                     </Typography>
                   )}
                 </FormControl>
@@ -431,7 +507,7 @@ const SellingForm = ({ open, onClose }) => {
                 </FormControl>
               </Grid>
 
-              {/* Model (New) */}
+              {/* Model */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -447,6 +523,7 @@ const SellingForm = ({ open, onClose }) => {
                 <Box sx={{ display: "flex", gap: 2, alignItems: "flex-end" }}>
                   <TextField
                     sx={{ flex: 1 }}
+                    required
                     label={t("selling.price")}
                     value={formData.price}
                     onChange={(e) => handlePriceChange(e.target.value)}
@@ -482,7 +559,29 @@ const SellingForm = ({ open, onClose }) => {
                 </Box>
               </Grid>
 
-              {/* WhatsApp Phone (New) */}
+              {/* Phone Number */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  required
+                  label={t("selling.phoneNumber")}
+                  value={formData.phone}
+                  onChange={(e) => {
+                    // Keep only digits
+                    const digitsOnly = e.target.value.replace(/\D/g, '');
+                    handleInputChange("phone", digitsOnly);
+                  }}
+                  error={!!errors.phone}
+                  helperText={errors.phone || t("selling.required")}
+                  placeholder={t("selling.phonePlaceholder")}
+                  inputProps={{
+                    maxLength: 15,
+                    inputMode: 'numeric'
+                  }}
+                />
+              </Grid>
+
+              {/* WhatsApp Phone */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -492,21 +591,6 @@ const SellingForm = ({ open, onClose }) => {
                   error={!!errors.whatsappPhone}
                   helperText={errors.whatsappPhone}
                   placeholder={t("selling.whatsappPlaceholder")}
-                />
-              </Grid>
-
-              {/* Phone Number */}
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label={t("selling.phoneNumber")}
-                  value={formData.phoneNumber}
-                  onChange={(e) =>
-                    handleInputChange("phoneNumber", e.target.value)
-                  }
-                  error={!!errors.phoneNumber}
-                  helperText={errors.phoneNumber || t("selling.required")}
-                  placeholder={t("selling.phonePlaceholder")}
                 />
               </Grid>
 
@@ -550,7 +634,7 @@ const SellingForm = ({ open, onClose }) => {
                 />
               </Grid>
 
-              {/* Location Text (New) */}
+              {/* Location Text */}
               <Grid item xs={12}>
                 <TextField
                   fullWidth
@@ -606,7 +690,7 @@ const SellingForm = ({ open, onClose }) => {
                 </Grid>
               </Grid>
 
-              {/* Negotiable Toggle (New) */}
+              {/* Negotiable Toggle */}
               <Grid item xs={12}>
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                   <Typography>{t("selling.negotiable")}</Typography>
@@ -622,6 +706,7 @@ const SellingForm = ({ open, onClose }) => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
+                  required
                   label={t("selling.description")}
                   value={formData.description}
                   onChange={(e) =>
@@ -662,7 +747,7 @@ const SellingForm = ({ open, onClose }) => {
                       style={{ display: "none" }}
                     />
                   </Button>
-                  {/* Only show Take Photo on mobile devices */}
+                  {/* Show camera button on mobile */}
                   {typeof window !== "undefined" &&
                     /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
                       navigator.userAgent
@@ -687,48 +772,48 @@ const SellingForm = ({ open, onClose }) => {
                 </Box>
 
                 {/* Display uploaded images */}
-                {imageFiles.length > 0 && (
-                  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                    {imageFiles.map((file, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          position: "relative",
-                          width: 100,
-                          height: 100,
-                          border: "1px solid #ddd",
-                          borderRadius: 1,
-                          overflow: "hidden",
-                        }}
-                      >
-                        <img
-                          src={URL.createObjectURL(file)}
-                          alt={`Product ${index + 1}`}
-                          style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                          }}
-                        />
-                        <IconButton
-                          size="small"
-                          onClick={() => removeImage(index)}
-                          sx={{
-                            position: "absolute",
-                            top: 2,
-                            right: 2,
-                            backgroundColor: "rgba(255,255,255,0.8)",
-                            "&:hover": {
-                              backgroundColor: "rgba(255,255,255,0.9)",
-                            },
-                          }}
-                        >
-                          <Delete fontSize="small" />
-                        </IconButton>
-                      </Box>
-                    ))}
-                  </Box>
-                )}
+{imageFiles.length > 0 && (
+  <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+    {imageFiles.map((image, index) => (
+      <Box
+        key={index}
+        sx={{
+          position: "relative",
+          width: 100,
+          height: 100,
+          border: "1px solid #ddd",
+          borderRadius: 1,
+          overflow: "hidden",
+        }}
+      >
+        <img
+          src={image.preview}
+          alt={`Product ${index + 1}`}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+          }}
+        />
+        <IconButton
+          size="small"
+          onClick={() => removeImage(index)}
+          sx={{
+            position: "absolute",
+            top: 2,
+            right: 2,
+            backgroundColor: "rgba(255,255,255,0.8)",
+            "&:hover": {
+              backgroundColor: "rgba(255,255,255,0.9)",
+            },
+          }}
+        >
+          <Delete fontSize="small" />
+        </IconButton>
+      </Box>
+    ))}
+  </Box>
+)}
               </Grid>
             </Grid>
           </DialogContent>
@@ -740,14 +825,26 @@ const SellingForm = ({ open, onClose }) => {
             <Button
               type="submit"
               variant="contained"
+              disabled={isSubmitting || isUploading || !checkAuthStatus()}
               sx={{
                 backgroundColor: "#2e7d32",
-                "&:hover": {
-                  backgroundColor: "#1b5e20",
-                },
+                "&:hover": { backgroundColor: "#1b5e20" },
+                "&:disabled": { backgroundColor: "#ccc" },
               }}
             >
-              {t("selling.submit")}
+              {isUploading ? (
+                <>
+                  <CircularProgress size={24} sx={{ color: 'white', mr: 1 }} />
+                  {`Uploading Images (${uploadProgress}%)`}
+                </>
+              ) : isSubmitting ? (
+                <>
+                  <CircularProgress size={24} sx={{ color: 'white', mr: 1 }} />
+                  {t("selling.submitting")}
+                </>
+              ) : (
+                t("selling.submit")
+              )}
             </Button>
           </DialogActions>
         </form>
@@ -755,8 +852,11 @@ const SellingForm = ({ open, onClose }) => {
 
       {/* Login Modal */}
       <LoginModal
-        open={loginModalOpen}
-        onClose={() => setLoginModalOpen(false)}
+        open={loginModalOpen && !isAuthenticated}
+        onClose={() => {
+          setLoginModalOpen(false);
+          handleClose();
+        }}
         onSuccess={handleLoginSuccess}
         onOpenSignup={handleOpenSignup}
       />
@@ -764,7 +864,10 @@ const SellingForm = ({ open, onClose }) => {
       {/* Signup Modal */}
       <SignupModal
         open={signupModalOpen}
-        onClose={() => setSignupModalOpen(false)}
+        onClose={() => {
+          setSignupModalOpen(false);
+          setLoginModalOpen(true);
+        }}
         onSuccess={handleSignupSuccess}
       />
     </>

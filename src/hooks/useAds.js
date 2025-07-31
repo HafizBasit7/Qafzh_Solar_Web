@@ -1,57 +1,35 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { adsAPI } from '../services/api';
 
-const useAds = () => {
+export const useAds = () => {
   // Get all ads with pagination
-  const useAdsQuery = (filters = {}, options = {}) => {
+  const useAdsQuery = (filters = {}) => {
     return useInfiniteQuery({
-      queryKey: ['ads', 'list', filters],
-      queryFn: ({ pageParam = 1 }) => {
-        return adsAPI.getAds({
-          ...filters,
+      queryKey: ['ads', filters],
+      queryFn: async ({ pageParam = 1 }) => {
+        const response = await adsAPI.getAds({
           page: pageParam,
           limit: filters.limit || 10,
+          ...filters
         });
+        
+        return {
+          data: response.data || [],
+          total: response.total || 0,
+          currentPage: response.currentPage || pageParam,
+          totalPages: response.totalPages || 1
+        };
       },
       getNextPageParam: (lastPage) => {
-        // Check if there are more pages
-        if (!lastPage?.data || lastPage.data.length < (filters.limit || 10)) {
-          return undefined; // No more pages
-        }
-        // Get current page from the last request
-        const currentPage = lastPage.currentPage || 1;
-        return currentPage + 1;
+        return lastPage.currentPage < lastPage.totalPages 
+          ? lastPage.currentPage + 1 
+          : undefined;
       },
-      ...options,
-    });
-  };
-
-  // Search ads
-  const useSearchAdsQuery = (searchParams = {}, options = {}) => {
-    return useInfiniteQuery({
-      queryKey: ['ads', 'search', searchParams],
-      queryFn: ({ pageParam = 1 }) => {
-        return adsAPI.searchAds({
-          ...searchParams,
-          page: pageParam,
-          limit: searchParams.limit || 10,
-        });
-      },
-      getNextPageParam: (lastPage) => {
-        if (!lastPage?.data || lastPage.data.length < (searchParams.limit || 10)) {
-          return undefined;
-        }
-        const currentPage = lastPage.currentPage || 1;
-        return currentPage + 1;
-      },
-      ...options,
+      staleTime: 1000 * 60 * 5, // 5 minutes
     });
   };
 
   return {
-    useAdsQuery,
-    useSearchAdsQuery,
+    useAdsQuery
   };
 };
-
-export default useAds;
