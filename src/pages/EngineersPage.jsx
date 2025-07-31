@@ -16,9 +16,9 @@ import {
   MenuItem,
   Paper,
   Chip,
-  Rating,
   Avatar,
   Divider,
+  CircularProgress,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import {
@@ -26,94 +26,23 @@ import {
   FilterList,
   LocationOn,
   Work,
-  Phone,
-  Email,
+  CheckCircle,
 } from "@mui/icons-material";
+import { useEngineers } from "../hooks/useEngineers";
 
 const EngineersPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedLocation, setSelectedLocation] = useState("");
   const [selectedExperience, setSelectedExperience] = useState("");
-  const [expandedDescriptions, setExpandedDescriptions] = useState({});
-  const [selectedRating, setSelectedRating] = useState("");
+  // const [selectedRating, setSelectedRating] = useState("");
 
-  // Sample engineer data
-  const engineers = [
-    {
-      id: 1,
-      name: "أحمد محمد علي",
-      location: "صنعاء",
-      experience: "5-10 سنوات",
-      projects: 45,
-      phone: "+967 777 123 456",
-      email: "ahmed@example.com",
-      image: "https://via.placeholder.com/200x200/4caf50/ffffff?text=Engineer",
-      specialties: ["تركيب الأنظمة الشمسية", "صيانة المحولات"],
-      description:
-        "مهندس معتمد في مجال الطاقة الشمسية مع خبرة 8 سنوات في تركيب وصيانة الأنظمة الشمسية. متخصص في تصميم الأنظمة المنزلية والتجارية مع التركيز على الكفاءة والموثوقية. حاصل على شهادات معتمدة من كبرى الشركات العالمية في مجال الطاقة المتجددة.",
-    },
-    {
-      id: 2,
-      name: "فاطمة عبدالله",
-      location: "عدن",
-      experience: "3-5 سنوات",
-      projects: 32,
-      phone: "+967 777 234 567",
-      email: "fatima@example.com",
-      image: "https://via.placeholder.com/200x200/2196f3/ffffff?text=Engineer",
-      specialties: ["تصميم الأنظمة", "حسابات الطاقة"],
-      description: "مهندسة متخصصة في تصميم الأنظمة الشمسية للمنازل",
-    },
-    {
-      id: 3,
-      name: "محمد سالم",
-      location: "تعز",
-      experience: "10+ سنوات",
-      projects: 78,
-      phone: "+967 777 345 678",
-      email: "mohammed@example.com",
-      image: "https://via.placeholder.com/200x200/ff9800/ffffff?text=Engineer",
-      specialties: ["الأنظمة الصناعية", "استشارات الطاقة"],
-      description: "مهندس خبير في الأنظمة الشمسية الصناعية والتجارية",
-    },
-    {
-      id: 4,
-      name: "علي حسن",
-      location: "الحديدة",
-      experience: "1-3 سنوات",
-      projects: 18,
-      phone: "+967 777 456 789",
-      email: "ali@example.com",
-      image: "https://via.placeholder.com/200x200/9c27b0/ffffff?text=Engineer",
-      specialties: ["تركيب الألواح", "صيانة البطاريات"],
-      description: "مهندس شاب متخصص في تركيب وصيانة الأنظمة المنزلية",
-    },
-    {
-      id: 5,
-      name: "سارة أحمد",
-      location: "صنعاء",
-      experience: "5-10 سنوات",
-      projects: 56,
-      phone: "+967 777 567 890",
-      email: "sara@example.com",
-      image: "https://via.placeholder.com/200x200/e91e63/ffffff?text=Engineer",
-      specialties: ["أنظمة الضخ الشمسي", "الطاقة المتجددة"],
-      description: "مهندسة متخصصة في أنظمة الضخ الشمسي والطاقة المتجددة",
-    },
-    {
-      id: 6,
-      name: "يوسف عبدالرحمن",
-      location: "إب",
-      experience: "3-5 سنوات",
-      projects: 28,
-      phone: "+967 777 678 901",
-      email: "yousef@example.com",
-      image: "https://via.placeholder.com/200x200/607d8b/ffffff?text=Engineer",
-      specialties: ["أنظمة الشبكة", "المراقبة عن بعد"],
-      description: "مهندس متخصص في أنظمة الشبكة والمراقبة الذكية",
-    },
-  ];
+  // Use the engineers hook
+  const { engineers, isLoading, isError, error } = useEngineers({
+    search_keyword: searchTerm,
+    governorate: selectedLocation,
+    // You can add more filters here based on your API
+  });
 
   const locations = ["صنعاء", "عدن", "تعز", "الحديدة", "إب", "حضرموت"];
   const experienceLevels = [
@@ -123,16 +52,23 @@ const EngineersPage = () => {
     "10+ سنوات",
   ];
 
-  const filteredEngineers = engineers.filter((engineer) => {
-    const matchesSearch =
-      engineer.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      engineer.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesLocation =
-      !selectedLocation || engineer.location === selectedLocation;
-    const matchesExperience =
-      !selectedExperience || engineer.experience === selectedExperience;
-    return matchesSearch && matchesLocation && matchesExperience;
-  });
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+        <Typography color="error">
+          {error?.message || "حدث خطأ أثناء جلب بيانات المهندسين"}
+        </Typography>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -215,8 +151,8 @@ const EngineersPage = () => {
 
       {/* Engineers Grid */}
       <Grid container spacing={3}>
-        {filteredEngineers.map((engineer) => (
-          <Grid item xs={12} sm={6} md={4} key={engineer.id}>
+        {engineers?.map((engineer) => (
+          <Grid item xs={12} sm={6} md={4} key={engineer._id}>
             <Card
               sx={{
                 height: "100%",
@@ -229,35 +165,27 @@ const EngineersPage = () => {
                   boxShadow: 4,
                 },
               }}
-              onClick={() => navigate(`/engineer/${engineer.id}`)}
+              onClick={() => navigate(`/engineer/${engineer._id}`)}
             >
               <Box sx={{ p: 2, textAlign: "center" }}>
                 <Avatar
-                  src={engineer.image}
+                  src={engineer.profileImageUrl}
                   sx={{ width: 80, height: 80, mx: "auto", mb: 2 }}
                 />
-                <Typography
-                  variant="h6"
-                  component="h2"
-                  gutterBottom
-                  sx={{ fontWeight: "bold" }}
-                >
-                  {engineer.name}
-                </Typography>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    mb: 1,
-                  }}
-                ></Box>
-                <Chip
-                  label={`${engineer.projects} مشروع`}
-                  size="small"
-                  color="primary"
-                  sx={{ mb: 1 }}
-                />
+                <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                  <Typography
+                    variant="h6"
+                    component="h2"
+                    gutterBottom
+                    sx={{ fontWeight: "bold" }}
+                  >
+                    {engineer.name}
+                  </Typography>
+                  {engineer.isVerified && (
+                    <CheckCircle color="primary" sx={{ ml: 1 }} />
+                  )}
+                </Box>
+               
               </Box>
 
               <Divider />
@@ -269,16 +197,16 @@ const EngineersPage = () => {
                   gutterBottom
                   sx={{ textAlign: "right" }}
                 >
-                  {engineer.description.length > 40
-                    ? engineer.description.substring(0, 40) + "..."
-                    : engineer.description}
+                  {engineer.experience?.description?.length > 40
+                    ? engineer.experience.description.substring(0, 40) + "..."
+                    : engineer.experience?.description || "لا يوجد وصف"}
                 </Typography>
-                {engineer.description.length > 40 && (
+                {engineer.experience?.description?.length > 40 && (
                   <Button
                     size="small"
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/engineer/${engineer.id}`);
+                      navigate(`/engineer/${engineer._id}`);
                     }}
                     sx={{
                       p: 0,
@@ -304,7 +232,7 @@ const EngineersPage = () => {
                     sx={{ fontSize: 16, ml: 1, color: "text.secondary" }}
                   />
                   <Typography variant="body2" sx={{ textAlign: "right" }}>
-                    {engineer.location}
+                    {engineer.city}, {engineer.governorate}
                   </Typography>
                 </Box>
 
@@ -318,7 +246,20 @@ const EngineersPage = () => {
                 >
                   <Work sx={{ fontSize: 16, ml: 1, color: "text.secondary" }} />
                   <Typography variant="body2" sx={{ textAlign: "right" }}>
-                    {engineer.experience}
+                    {engineer.experience?.years} سنوات خبرة
+                  </Typography>
+                </Box>
+
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    mb: 1,
+                    justifyContent: "flex-end",
+                  }}
+                >
+                  <Typography variant="body2" sx={{ textAlign: "right" }}>
+                    {engineer.pricing?.hourlyRate} {engineer.pricing?.currency}/ساعة
                   </Typography>
                 </Box>
 
@@ -330,20 +271,29 @@ const EngineersPage = () => {
                     justifyContent: "flex-end",
                   }}
                 >
-                  {engineer.specialties.slice(0, 2).map((specialty, index) => (
+                  {engineer.services?.slice(0, 2).map((service, index) => (
                     <Chip
                       key={index}
-                      label={specialty}
+                      label={service}
                       size="small"
                       variant="outlined"
                       sx={{ ml: 0.5, mb: 0.5 }}
+                    />
+                  ))}
+                  {engineer.specializations?.slice(0, 2).map((spec, index) => (
+                    <Chip
+                      key={`spec-${index}`}
+                      label={spec}
+                      size="small"
+                      variant="outlined"
+                      sx={{ ml: 0.5, mb: 0.5 }} 
                     />
                   ))}
                 </Box>
               </CardContent>
 
               <CardActions>
-                <Button size="small" color="primary" fullWidth>
+                <Button size="small" color="primary" fullWidth sx={{ fontSize: { xs: "0.8rem", md: "0.9rem" } }}>
                   عرض الملف الشخصي
                 </Button>
               </CardActions>
@@ -352,7 +302,7 @@ const EngineersPage = () => {
         ))}
       </Grid>
 
-      {filteredEngineers.length === 0 && (
+      {engineers?.length === 0 && ( 
         <Box sx={{ textAlign: "center", py: 8 }}>
           <Typography variant="h6" color="text.secondary">
             لم يتم العثور على مهندسين يطابقون معايير البحث

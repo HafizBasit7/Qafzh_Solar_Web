@@ -5,23 +5,17 @@ import {
   Container,
   Typography,
   Grid,
-  Card,
-  CardContent,
   Button,
   Chip,
-  Rating,
   Avatar,
   Paper,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemIcon,
   Divider,
   ImageList,
   ImageListItem,
   Modal,
   IconButton,
   Stack,
+  CircularProgress,
 } from "@mui/material";
 import {
   ArrowBack,
@@ -37,61 +31,50 @@ import {
   Description as DescriptionIcon,
   Close as CloseIcon,
   Notes as NotesIcon,
+  Schedule as ScheduleIcon,
+  MonetizationOn as MonetizationOnIcon,
+  Visibility as VisibilityIcon,
+  ContactMail as ContactMailIcon,
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
+import { useEngineer } from "../hooks/useEngineers";
 
 const EngineerDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { t } = useTranslation();
   const [selectedImage, setSelectedImage] = useState(null);
+  
+  const { data: response, isLoading, isError, error } = useEngineer(id);
+  const engineer = response?.data;
 
-  // Sample engineer data (in real app, this would come from API)
-  const engineer = {
-    id: parseInt(id),
-    name: "أحمد محمد علي",
-    profileImageUrl: "https://via.placeholder.com/300x300/4caf50/ffffff?text=Engineer",
-    isVerified: true,
-    isFeatured: true,
-    specializations: ["تركيب الأنظمة الشمسية", "صيانة المحولات", "تصميم الأنظمة"],
-    address: "شارع الستين",
-    city: "صنعاء",
-    governorate: "صنعاء",
-    phone: "+967 777 123 456",
-    whatsappPhone: "+967 777 123 456",
-    email: "ahmed@example.com",
-    notes: "متوفر للاستشارات الفنية والمعاينة المجانية",
-    services: [
-      "تصميم الأنظمة الشمسية",
-      "تركيب الألواح والمحولات",
-      "صيانة دورية للأنظمة",
-      "استشارات فنية",
-      "حسابات الطاقة والكفاءة",
-    ],
-    experience: {
-      years: 8,
-      description: "خبرة في تركيب وصيانة الأنظمة الشمسية للمنازل والشركات"
-    },
-    certifications: [
-      {
-        name: "شهادة معتمدة في الطاقة الشمسية",
-        issuedBy: "جامعة صنعاء",
-        issuedDate: "2020-01-01",
-        expiryDate: "2025-01-01"
-      },
-      {
-        name: "دورة متقدمة في أنظمة المحولات",
-        issuedBy: "معهد الطاقة المتجددة",
-        issuedDate: "2021-06-15",
-        expiryDate: "2026-06-15"
-      }
-    ],
-    portfolio: [
-      "https://picsum.photos/id/1015/500/400",
-      "https://picsum.photos/id/1016/500/400",
-      "https://picsum.photos/id/1018/500/400"
-    ]
-  };
+  if (isLoading) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+        <CircularProgress />
+      </Container>
+    );
+  }
+
+  if (isError || !engineer) {
+    return (
+      <Container maxWidth="lg" sx={{ py: 4, textAlign: "center" }}>
+        <Typography color="error">
+          {error?.message || "حدث خطأ أثناء جلب بيانات المهندس"}
+        </Typography>
+        <Button onClick={() => navigate("/engineers")} sx={{ mt: 2 }}>
+          العودة إلى قائمة المهندسين
+        </Button>
+      </Container>
+    );
+  }
+
+  // Format working days for display
+  const workingDaysDisplay = engineer.availability?.workingDays?.join("، ") || "غير متوفر";
+  // Format working hours for display
+  const workingHoursDisplay = engineer.availability?.workingHours 
+    ? `${engineer.availability.workingHours.start} - ${engineer.availability.workingHours.end}`
+    : "غير محدد";
 
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
@@ -112,7 +95,7 @@ const EngineerDetail = () => {
         >
           {t("common.back")}
         </Button>
-        <Typography variant="h6" sx={{ flex: 1, textAlign: 'center', fontWeight: 'bold' }}>
+        <Typography variant="h6" sx={{ flex: 1, textAlign: 'center', fontWeight: 'bold',  }}>
           {t("engineers.title")}
         </Typography>
       </Box>
@@ -146,22 +129,48 @@ const EngineerDetail = () => {
                 }}
               />
             )}
-            {/* {engineer.isFeatured && (
+            {engineer.isFeatured && (
               <Chip
                 icon={<Star sx={{ color: '#F59E0B !important' }} />}
-                label={t("ENGINEER.featured")}
+                label={t("engineers.featured")}
                 sx={{
                   bgcolor: '#FEF3C7',
                   color: '#D97706',
                   '& .MuiChip-icon': { color: '#F59E0B' }
                 }}
               />
-            )} */}
+            )}
           </Box>
 
           <Typography variant="h6" color="text.secondary" sx={{ mb: 2 }}>
-            {engineer.specializations.join(" • ")}
+            {engineer.specializations?.join(" • ")}
           </Typography>
+
+          {/* Stats */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 3, mt: 2 }}>
+            {/* <Box sx={{ textAlign: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <VisibilityIcon fontSize="small" color="action" />
+                <Typography variant="body2" color="text.secondary">
+                  {engineer.views || 0}
+                </Typography>
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                {t("engineers.views")}
+              </Typography>
+            </Box> */}
+            {/* <Box sx={{ textAlign: 'center' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                <ContactMailIcon fontSize="small" color="action" />
+                <Typography variant="body2" color="text.secondary">
+                  {engineer.contactsCount || 0}
+                </Typography>
+              </Box>
+              <Typography variant="caption" color="text.secondary">
+                {t("engineers.contacts")}
+              </Typography>
+            </Box> */}
+          </Box>
         </Box>
       </Paper>
 
@@ -248,7 +257,7 @@ const EngineerDetail = () => {
               {t("common.services")}
             </Typography>
             <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-              {engineer.services.map((service, index) => (
+              {engineer.services?.map((service, index) => (
                 <Chip
                   key={index}
                   label={service}
@@ -256,6 +265,23 @@ const EngineerDetail = () => {
                     bgcolor: '#16A34A',
                     color: '#DCFCE7',
                     border: '1px solid #DCFCE7'
+                  }}
+                />
+              ))}
+            </Box>
+            
+            <Typography variant="h6" gutterBottom fontWeight="bold" sx={{ mt: 3 }}>
+              {t("common.specifications")}
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+              {engineer.specializations?.map((specialization, index) => (
+                <Chip
+                  key={index}
+                  label={specialization}
+                  sx={{
+                    bgcolor: '#2563EB',
+                    color: '#DBEAFE',
+                    border: '1px solid #DBEAFE'
                   }}
                 />
               ))}
@@ -273,65 +299,110 @@ const EngineerDetail = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Work sx={{ color: '#16A34A' }} />
                 <Typography>
-                  {engineer.experience.years} {t("engineers.years")}
+                  {engineer.experience?.years || 0} {t("engineers.years")}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <DescriptionIcon sx={{ color: '#16A34A' }} />
-                <Typography>{engineer.experience.description}</Typography>
+                <Typography>{engineer.experience?.description || t("engineers.noDescription")}</Typography>
+              </Box>
+            </Stack>
+          </Paper>
+        </Grid>
+
+        {/* Pricing & Availability Section */}
+        <Grid item xs={12} md={6}>
+          <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
+            <Typography variant="h6" gutterBottom fontWeight="bold">
+              {t("products.filters.price")}
+            </Typography>
+            <Stack spacing={2}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <MonetizationOnIcon sx={{ color: '#16A34A' }} />
+                <Typography>
+                  {t("common.hourlyRate")}: {engineer.pricing?.hourlyRate || 0} {engineer.pricing?.currency || 'USD'}
+                </Typography>
+              </Box>
+              {engineer.pricing?.minimumCharge && (
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                  <MonetizationOnIcon sx={{ color: '#16A34A' }} />
+                  <Typography>
+                    {t("common.minimumCharge")}: {engineer.pricing.minimumCharge} {engineer.pricing.currency}
+                  </Typography>
+                </Box>
+              )}
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <ScheduleIcon sx={{ color: '#16A34A' }} />
+                <Typography>
+                  {t("products.status")}: {engineer.availability?.status || t("engineers.unknown")}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <ScheduleIcon sx={{ color: '#16A34A' }} />
+                <Typography>
+                  {t("common.workingHours")}: {workingHoursDisplay}
+                </Typography>
+              </Box>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                <ScheduleIcon sx={{ color: '#16A34A' }} />
+                <Typography>
+                  {t("common.workingDays")}: {workingDaysDisplay}
+                </Typography>
               </Box>
             </Stack>
           </Paper>
         </Grid>
 
         {/* Certifications Section */}
-        <Grid item xs={12}>
-          <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
-            <Typography variant="h6" gutterBottom fontWeight="bold">
-              {t("engineers.certifications")}
-            </Typography>
-            <Grid container spacing={2}>
-              {engineer.certifications.map((cert, index) => (
-                <Grid item xs={12} md={6} key={index}>
-                  <Paper 
-                    sx={{ 
-                      p: 2, 
-                      bgcolor: '#F8FAFC',
-                      borderRadius: 3,
-                      border: '1px solid #F1F5F9'
-                    }}
-                  >
-                    <Stack spacing={1}>
-                      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                        <SchoolIcon sx={{ color: '#16A34A' }} />
-                        <Typography fontWeight="bold">{cert.name}</Typography>
-                      </Box>
-                      <Typography color="text.secondary">{cert.issuedBy}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {t("engineers.issued")}: {new Date(cert.issuedDate).toLocaleDateString()}
-                      </Typography>
-                      {cert.expiryDate && (
+        {engineer.certifications?.length > 0 && (
+          <Grid item xs={12}>
+            <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
+              <Typography variant="h6" gutterBottom fontWeight="bold">
+                {t("engineers.certifications")}
+              </Typography>
+              <Grid container spacing={2}>
+                {engineer.certifications.map((cert, index) => (
+                  <Grid item xs={12} md={6} key={index}>
+                    <Paper 
+                      sx={{ 
+                        p: 2, 
+                        bgcolor: '#F8FAFC',
+                        borderRadius: 3,
+                        border: '1px solid #F1F5F9'
+                      }}
+                    >
+                      <Stack spacing={1}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <SchoolIcon sx={{ color: '#16A34A' }} />
+                          <Typography fontWeight="bold">{cert.name}</Typography>
+                        </Box>
+                        <Typography color="text.secondary">{cert.issuedBy}</Typography>
                         <Typography variant="body2" color="text.secondary">
-                          {t("engineers.expires")}: {new Date(cert.expiryDate).toLocaleDateString()}
+                          {t("engineers.issued")}: {new Date(cert.issuedDate).toLocaleDateString()}
                         </Typography>
-                      )}
-                    </Stack>
-                  </Paper>
-                </Grid>
-              ))}
-            </Grid>
-          </Paper>
-        </Grid>
+                        {cert.expiryDate && (
+                          <Typography variant="body2" color="text.secondary">
+                            {t("engineers.expires")}: {new Date(cert.expiryDate).toLocaleDateString()}
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Paper>
+                  </Grid>
+                ))}
+              </Grid>
+            </Paper>
+          </Grid>
+        )}
 
         {/* Portfolio Section */}
-        {engineer.portfolio && engineer.portfolio.length > 0 && (
+        {engineer.portfolioImages?.length > 0 && (
           <Grid item xs={12}>
             <Paper elevation={2} sx={{ p: 3, borderRadius: 4 }}>
               <Typography variant="h6" gutterBottom fontWeight="bold">
                 {t("engineers.portfolio")}
               </Typography>
               <ImageList cols={3} gap={16}>
-                {engineer.portfolio.map((image, index) => (
+                {engineer.portfolioImages.map((image, index) => (
                   <ImageListItem 
                     key={index}
                     sx={{ 
@@ -343,7 +414,7 @@ const EngineerDetail = () => {
                   >
                     <img
                       src={image}
-                      alt={`Portfolio ${index + 1}`}
+                      alt={`${t("engineers.portfolioImage")} ${index + 1}`}
                       loading="lazy"
                       style={{ borderRadius: 8 }}
                     />
@@ -380,7 +451,7 @@ const EngineerDetail = () => {
           </IconButton>
           <img
             src={selectedImage}
-            alt="Portfolio"
+            alt={t("engineers.portfolioView")}
             style={{
               maxWidth: '100%',
               maxHeight: '90vh',

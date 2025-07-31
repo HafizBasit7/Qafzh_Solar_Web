@@ -15,7 +15,6 @@ import {
   Slider,
   Paper,
   Chip,
-  CircularProgress,
   Alert,
 } from "@mui/material";
 import { useNavigate } from "react-router-dom";
@@ -35,7 +34,6 @@ const ProductsPage = () => {
   // Use the products hook with minimal filtering
 const {
     products,  // This now comes directly from the hook
-    totalCount,
     isLoading,
     isError,
     error,
@@ -310,10 +308,10 @@ const {
         ))}
       </Grid>
 
-      {/* No Results */}
-      {!isLoading && products.length === 0 && (
-        <Box sx={{ textAlign: "center", py: { xs: 6, md: 8 } }}>
-          <Typography
+      {/* No Results */}  
+      {!isLoading && products.length === 0 && ( 
+        <Box sx={{ textAlign: "center", py: { xs: 6, md: 8 } }}>  
+          <Typography 
             variant="h6"
             color="text.secondary"
             sx={{ fontSize: { xs: "1rem", md: "1.2rem" } }}

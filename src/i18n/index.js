@@ -170,6 +170,9 @@ const resources = {
       "common.shopStats": "إحصائيات المحل",
       "common.additionalInfo": "معلومات إضافية",
       "common.verified": "معتمد",
+      "common.workingDays": "أيام العمل",
+      "common.hourlyRate": "السعر بالساعة",
+    "common.minimumCharge": "الحد الأدنى للرسوم",
 
       // Locations
       "locations.sanaa": "صنعاء",
@@ -446,6 +449,7 @@ const resources = {
       "common.location": "Location",
       "common.address": "Address",
       "common.workingHours": "Working Hours",
+      "common.workingDays":"Working Days",
       "common.established": "Established",
       "common.teamSize": "Team Size",
       "common.projectsCompleted": "Projects Completed",
@@ -465,6 +469,8 @@ const resources = {
       "common.approvedBrands": "Approved Brands",
       "common.shopStats": "Shop Statistics",
       "common.additionalInfo": "Additional Information",
+      "common.hourlyRate": "Hourly Rate",
+    "common.minimumCharge": "Minimum Charge",
 
       // Locations
       "locations.sanaa": "Sanaa",
