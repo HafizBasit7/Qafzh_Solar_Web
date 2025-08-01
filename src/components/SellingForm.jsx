@@ -748,7 +748,7 @@ const SellingForm = ({ open, onClose }) => {
                     />
                   </Button>
                   {/* Show camera button on mobile */}
-                  {typeof window !== "undefined" &&
+                  {/* {typeof window !== "undefined" &&
                     /Mobi|Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(
                       navigator.userAgent
                     ) && (
@@ -768,7 +768,7 @@ const SellingForm = ({ open, onClose }) => {
                           style={{ display: "none" }}
                         />
                       </Button>
-                    )}
+                    )} */}
                 </Box>
 
                 {/* Display uploaded images */}

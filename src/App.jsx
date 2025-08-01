@@ -29,7 +29,10 @@ import EngineerDetail from "./pages/EngineerDetail";
 import ShopDetail from "./pages/ShopDetail";
 import SolarCalculator from "./SolarCalculator";
 import ShopAdsPage from "./pages/ShopAdsPage";
-
+import UpdateProfile from "./pages/UpdateProfile";
+import MyProducts from "./pages/MyProducts";
+import SignupScreen from "./pages/SignupScreen";
+import VerifyOtpScreen from "./pages/VerifyOtpScreen";
 
 const theme = createTheme({
   palette: {
@@ -105,6 +108,10 @@ function App() {
                   <Route path="/shop/:id" element={<ShopDetail />} />
                   <Route path="/calculator" element={<SolarCalculator />} />
                   <Route path="/shop-ads" element={<ShopAdsPage />} />
+                  <Route path="/update-profile" element={<UpdateProfile />} />
+                  <Route path="/my-products" element={<MyProducts />} />
+                  <Route path="/signup" element={<SignupScreen />} />
+                  <Route path="/verify-otp" element={<VerifyOtpScreen />} />
                 </Routes>
               </Box>
             </Router>

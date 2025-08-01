@@ -234,7 +234,7 @@ const ProductDetail = () => {
                   <Stack spacing={1} alignItems="flex-start">
                     <BusinessIcon sx={{ color: '#64748B' }} />
                     <Typography color="text.secondary" variant="body2">
-                      {t("products.brand")}
+                      {t("selling.brand")}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
                       {product.brand || t("products.notSpecified")} {product.model && `(${product.model})`}
@@ -274,7 +274,7 @@ const ProductDetail = () => {
             {/* Description */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom fontWeight="bold">
-                {t("products.description")}
+                {t("selling.description")}
               </Typography>
               <Typography variant="body1" color="text.secondary">
                 {product.description || t("products.noDescription")}
@@ -291,7 +291,7 @@ const ProductDetail = () => {
                   {product.specifications && Object.entries(product.specifications).map(([key, value]) => (
                     <Grid item xs={6} key={key}>
                       <Typography color="text.secondary" variant="body2">
-                        {t(`products.specs.${key}`) || key}
+                        {t(`products.${key}`) || key}
                       </Typography>
                       <Typography variant="body1" fontWeight="bold">
                         {value || t("products.notSpecified")}
@@ -308,7 +308,7 @@ const ProductDetail = () => {
                 <Stack spacing={1}>
                   <Typography variant="body2" color="text.secondary">
                     {t("products.status")}: <Typography component="span" fontWeight="bold">
-                      {t(`products.statuses.${product.status}`)}
+                      {t(`${product.status}`)}
                     </Typography>
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
@@ -323,11 +323,11 @@ const ProductDetail = () => {
                       </Typography>
                     </Typography>
                   )}
-                  <Typography variant="body2" color="text.secondary">
+                  {/* <Typography variant="body2" color="text.secondary">
                     {t("products.views")}: <Typography component="span" fontWeight="bold">
                       {product.viewCount || 0}
                     </Typography>
-                  </Typography>
+                  </Typography> */}
                 </Stack>
               </Paper>
             </Box>
@@ -335,7 +335,7 @@ const ProductDetail = () => {
             {/* Contact Info */}
             <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom fontWeight="bold">
-                {t("products.contactInfo")}
+                {t("common.contactInfo")}
               </Typography>
               <Paper sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: 3 }}>
                 <Stack spacing={2}>

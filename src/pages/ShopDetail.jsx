@@ -93,20 +93,20 @@ const ShopDetail = () => {
 
   // Translate service names
   const serviceTranslations = {
-    sale: t("shops.services.sale"),
-    install: t("shops.services.install"),
-    repair: t("shops.services.repair")
+    sale: "Sale",
+    install: "Install",
+    repair: "Repair"
   };
 
   // Translate days
   const dayTranslations = {
-    Sunday: t("days.sunday"),
-    Monday: t("days.monday"),
-    Tuesday: t("days.tuesday"),
-    Wednesday: t("days.wednesday"),
-    Thursday: t("days.thursday"),
-    Friday: t("days.friday"),
-    Saturday: t("days.saturday")
+    Sunday: t("common.sunday"),
+    Monday: t("common.monday"),
+    Tuesday: t("common.tuesday"),
+    Wednesday: t("common.wednesday"),
+    Thursday: t("common.thursday"),
+    Friday: t("common.friday"),
+    Saturday: t("common.saturday")
   };
 
   return (
@@ -171,7 +171,7 @@ const ShopDetail = () => {
           </Typography>
 
           {/* Rating */}
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {/* <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Rating
               value={shop.rating?.average || 0}
               precision={0.5}
@@ -181,7 +181,7 @@ const ShopDetail = () => {
             <Typography variant="body2" color="text.secondary">
               ({shop.rating?.count || 0} {t("common.reviews")})
             </Typography>
-          </Box>
+          </Box> */}
         </Box>
       </Paper>
 
@@ -281,7 +281,7 @@ const ShopDetail = () => {
                 {shop.services.map((service, index) => (
                   <Chip
                     key={index}
-                    label={serviceTranslations[service] || service}
+                    label={[service] || service}
                     sx={{
                       bgcolor: '#F0FDF4',
                       color: '#166534',

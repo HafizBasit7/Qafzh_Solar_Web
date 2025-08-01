@@ -8,6 +8,7 @@ const useAuth = () => {
   const [isInitialized, setIsInitialized] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userData, setUserData] = useState(null);
+  const [authError, setAuthError] = useState(null);
 
   // Initialize auth state from localStorage
   useEffect(() => {
@@ -63,16 +64,21 @@ const useAuth = () => {
     }
   };
 
+
+  
   // Register mutation
-  const registerMutation = useMutation({
-    mutationFn: (data) => authAPI.register(data),
-    onSuccess: (response) => {
-      console.log('🔐 Registration successful:', response);
-    },
-    onError: (error) => {
-      console.error('🔐 Registration error:', error);
-    }
-  });
+// Register mutation
+const registerMutation = useMutation({
+  mutationFn: (data) => authAPI.register(data),
+  onSuccess: (response) => {
+    console.log('🔐 Registration successful:', response);
+    return response; // Make sure to return the response
+  },
+  onError: (error) => {
+    console.error('🔐 Registration error:', error);
+    throw error; // Throw error to be caught in the component
+  }
+});
 
   // Verify OTP mutation
   const verifyOTPMutation = useMutation({
@@ -188,14 +194,20 @@ const useAuth = () => {
     logoutMutation.mutate();
   }, [logoutMutation]);
 
+  const clearAuthError = () => {
+    setAuthError(null);
+  };
+
   return {
     isInitialized,
     isAuthenticated: checkAuthStatus(),
     userData,
     token: storage.getToken(),
+    authError,
+    clearAuthError,
     
     // Register
-    register: registerMutation.mutate,
+    register: registerMutation.mutateAsync,
     registerLoading: registerMutation.isPending,
     registerError: registerMutation.error,
     

@@ -23,13 +23,13 @@ const SuccessDialog = ({ open, onClose, title, message, actionText }) => {
         <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <CheckCircleOutlineIcon color="success" sx={{ fontSize: 60, mb: 1 }} />
           <Typography variant="h5" component="div" fontWeight="bold">
-            {title || t('success')}
+            {title || t('login.success')}
           </Typography>
         </Box>
       </DialogTitle>
       <DialogContent sx={{ textAlign: 'center', pt: 2 }}>
         <Typography variant="body1">
-          {message}
+          {message || t('login.successDescription')}
         </Typography>
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'center', pb: 2 }}>
@@ -42,7 +42,7 @@ const SuccessDialog = ({ open, onClose, title, message, actionText }) => {
             borderRadius: 2,
           }}
         >
-          {actionText || t('ok')}
+          {actionText || t('login.continue')}
         </Button>
       </DialogActions>
     </Dialog>

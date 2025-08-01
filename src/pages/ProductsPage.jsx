@@ -259,7 +259,7 @@ const {
                       color: "primary.main",
                     }}
                   >
-                    {t("products.viewMore")}
+                    {/* {t("products.viewMore")} */}
                   </Button>
                 )}
                 <Box

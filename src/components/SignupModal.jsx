@@ -10,63 +10,93 @@ import {
   Typography,
   Alert,
   CircularProgress,
-  Link,
 } from "@mui/material";
-import { Close, Phone, Lock, PersonAdd, Person, LockReset } from "@mui/icons-material";
+import { Close, Phone, Lock, Person, LockReset } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-import  useAuth  from "../hooks/useAuth"; 
+import useAuth from "../hooks/useAuth";
 import { useDialogContext } from "../contexts/DialogContext";
 
 const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
   const { t } = useTranslation();
   const { showSuccess, showError } = useDialogContext();
-  const { 
-    register, 
-    registerLoading, 
-    registerError, 
-    verifyOTP, 
-    verifyOTPLoading, 
-    verifyOTPError,
-    isAuthenticated 
+
+  const {
+    register: registerMutation,
+    registerLoading,
+    verifyOTP,
+    verifyOTPLoading,
+    isAuthenticated,
   } = useAuth();
-  
-  const [step, setStep] = useState("register"); // "register", "otp", "success"
+
+  const [step, setStep] = useState("register");
   const [formData, setFormData] = useState({
     name: "",
     phone: "",
-    password: ""
+    password: "",
   });
-  const [otp, setOtp] = useState("");
+  const [otp, setOtp] = useState("112233"); // Default OTP set to 112233
   const [error, setError] = useState("");
-  
-  // If user becomes authenticated, close modal and trigger success
+  const [registrationSuccess, setRegistrationSuccess] = useState(false);
   useEffect(() => {
     if (isAuthenticated && open) {
       showSuccess(t("signup.successfulSignup"), t("signup.welcome"));
-      onSuccess();
+      onSuccess?.();
       handleClose();
     }
   }, [isAuthenticated, open, onSuccess, showSuccess, t]);
 
+  // const handleRegisterSubmit = (e) => {
+  //   e.preventDefault();
+  //   setError("");
+
+  //   registerMutation(
+  //     {
+  //       name: formData.name,
+  //       phone: formData.phone,  // Changed from phoneNumber to phone
+  //       password: formData.password,
+  //     },
+  //     {
+  //       onSuccess: (res) => {
+  //         if (res?.status === "fail") {
+  //           setError(res.message || t("signup.registerError"));
+  //           return;
+  //         }
+  //         // Show success message for registration
+  //         showSuccess(t("signup.registrationSuccess"), t("signup.otpSent"));
+  //         setStep("otp");
+  //       },
+  //       onError: (err) => {
+  //           console.log("msg",err);
+  //         setError(err.message);
+  //       },
+  //     }
+  //   );
+  // };
+
+
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.phone || !formData.password) {
-      setError(t("signup.fillAllFields"));
-      return;
-    }
-
-    if (formData.password.length < 8) {
-      setError(t("signup.passwordLength"));
-      return;
-    }
-
     setError("");
-
+  
     try {
-      await register(formData);
-      setStep("otp");
+      const response = await registerMutation({
+        name: formData.name,
+        phone: formData.phone,
+        password: formData.password,
+      });
+  
+      console.log("Registration response:", response);
+  
+      // Check if registration was successful
+      if (response?.status === "success" || response?.data?.success) {
+        showSuccess(t("signup.registrationSuccess"), t("signup.otpSent"));
+        setStep("otp"); // Move to OTP step
+      } else {
+        setError(response?.message || t("signup.registerError"));
+      }
     } catch (err) {
-      setError(err.message || t("signup.registrationError"));
+      console.error("Registration error:", err);
+      setError(err?.response?.data?.message || err.message || t("signup.registerError"));
     }
   };
 
@@ -80,10 +110,22 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
     setError("");
 
     try {
-      await verifyOTP({ phone: formData.phone, otp });
-      // If verification is successful, the useEffect will handle the success
+      const res = await verifyOTP({
+        phone: formData.phone,
+        otp,
+      });
+
+      if (res?.token) {
+        localStorage.setItem("authToken", res.token);
+        showSuccess(t("signup.verificationSuccess"), t("signup.welcome"));
+        onSuccess?.();
+        handleClose();
+      }
     } catch (err) {
-      setError(err.message || t("signup.verifyOtpError"));
+      const message =
+        err?.response?.data?.message || t("signup.verifyOtpError");
+      showError(message);
+      setError(message);
     }
   };
 
@@ -92,19 +134,24 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
     setFormData({
       name: "",
       phone: "",
-      password: ""
+      password: "",
     });
-    setOtp("");
+    setOtp("112233"); // Reset to default OTP
     setError("");
     onClose();
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: name === "phone" ? value.replace(/\D/g, "") : value,
     }));
+  };
+
+  const handleOpenLogin = () => {
+    handleClose();
+    onOpenLogin();
   };
 
   const renderRegisterStep = () => (
@@ -148,6 +195,7 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
               ),
             }}
             sx={{ mb: 2 }}
+            required
           />
 
           <TextField
@@ -164,6 +212,7 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
               ),
             }}
             sx={{ mb: 2 }}
+            required
           />
 
           <TextField
@@ -180,20 +229,27 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
               ),
             }}
             sx={{ mb: 2 }}
+            required
           />
 
-          <Box sx={{ textAlign: "center", mt: 2 }}>
-            <Typography variant="body2" color="text.secondary">
-              {t("register.alreadyHaveAccount")}{" "}
-              <Link
-                component="button"
-                type="button"
-                onClick={onOpenLogin}
-                sx={{ fontWeight: "bold" }}
-              >
-                {t("register.login")}
-              </Link>
+          <Box sx={{ textAlign: "center", mt: 3 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+              {t("register.haveAccount")}
             </Typography>
+            <Button
+              variant="text"
+              onClick={handleOpenLogin}
+              sx={{
+                color: "#2e7d32",
+                textTransform: "none",
+                "&:hover": {
+                  textDecoration: "underline",
+                  backgroundColor: "transparent",
+                },
+              }}
+            >
+              {t("register.loginHere")}
+            </Button>
           </Box>
         </DialogContent>
         <DialogActions sx={{ p: 3, pt: 0 }}>
@@ -203,7 +259,12 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
           <Button
             type="submit"
             variant="contained"
-            disabled={registerLoading || !formData.name || !formData.phone || !formData.password}
+            disabled={
+              registerLoading ||
+              !formData.name ||
+              !formData.phone ||
+              !formData.password
+            }
             startIcon={registerLoading ? <CircularProgress size={20} /> : null}
             sx={{
               backgroundColor: "#2e7d32",
@@ -263,10 +324,16 @@ const SignupModal = ({ open, onClose, onSuccess, onOpenLogin }) => {
               },
             }}
             InputProps={{
-              startAdornment: <LockReset sx={{ mr: 1, color: "text.secondary" }} />,
+              startAdornment: (
+                <LockReset sx={{ mr: 1, color: "text.secondary" }} />
+              ),
             }}
             sx={{ mb: 2 }}
           />
+
+          <Typography variant="caption" color="text.secondary">
+            {t("register.defaultOtpHint")} 112233
+          </Typography>
 
           <Box sx={{ textAlign: "center", mt: 2 }}>
             <Button
