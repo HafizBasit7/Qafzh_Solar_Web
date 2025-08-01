@@ -88,6 +88,13 @@ const resources = {
       "products.filters.sort.oldest": "الأقدم أولاً",
       "products.loading": "جاري تحميل المنتجات...",
       "products.error": "خطأ في تحميل المنتجات. يرجى المحاولة مرة أخرى.",
+      "products.myProducts": "منتجاتي",
+      "products.myProductsDescription": "إدارة منتجاتك المدرجة",
+      "products.myProductsTitle": "منتجاتي",
+      "products.noProducts": "لم يتم العثور على منتجات",
+      "products.addProduct": "إضافة منتج",
+      "products.addFirstProduct": "إضافة منتجك الأول",
+      "products.deleteConfirmTitle": "حذف المنتج",
 
 
       // Engineers
@@ -189,6 +196,21 @@ const resources = {
     "common.friday": "الجمعة",
     "common.saturday": "السبت",
     "common.currency": "اليمني",
+    "common.userExists": "المستخدم موجود بالفعل",
+    "common.userNotExists": "المستخدم غير موجود",
+    "signup.otpSent": "تم إرسال رمز التحقق إلى رقم هاتفك",
+        "signup.registrationSuccess": "تم إنشاء الحساب بنجاح",
+        "signup.registrationError": "حدث خطأ في التسجيل",
+        "signup.registration": "تسجيل",
+        "signup.registrationError": "حدث خطأ في التسجيل",
+        "register.otpSent": "OTP sent to your phone",
+        "register.registrationSuccess": "Registration successful",
+        "register.registrationError": "Registration error",
+        "register.registration": "Registration",
+        "register.registrationError": "Registration error",
+        
+
+
       // Locations
       "locations.sanaa": "صنعاء",
       "locations.aden": "عدن",
@@ -354,6 +376,20 @@ const resources = {
       "register.phonePlaceholder": "+967 7XX XXX XXX",
       "register.governorate": "المحافظة",
       "register.registerDescription": "أدخل رقم هاتفك وكلمة المرور لتسجيل الدخول",
+      "register.errors.userExists": "المستخدم موجود بالفعل",
+      "register.otpsent": "تم إرسال رمز التحقق إلى رقم هاتفك",
+      "register.registrationSuccess": "تم إنشاء الحساب بنجاح",
+      "register.registrationError": "حدث خطأ في التسجيل",
+      "register.registration": "تسجيل",
+      "register.registrationError": "حدث خطأ في التسجيل",
+      "signup.register": "تسجيل",
+      "register.otp": "رمز التحقق",
+
+      "profile.myProducts": "منتجاتي",
+      "profile.updateProfile": "تحديث التعديلات",
+
+
+
       "ads.active": "مفعل",
       "ads.inactive": "غير مفعل",
       "ads.noneFound": "لم يتم العثور على إعلانات",
@@ -380,13 +416,27 @@ const resources = {
       "profile.saveChanges": "حفظ التعديلات",
       "profile.logout": "تسجيل الخروج",
 
-      "auth.comeBackSoon": "Come back soon!",
-      "auth.logoutSuccess": "Logged out successfully!",
-      "auth.logoutError": "Error logging out",
-      "auth.logoutConfirm": "Are you sure you want to logout?",
-      "auth.logoutConfirmDescription": "You will be logged out of your account and redirected to the home page",
-      "auth.logoutConfirmTitle": "Logout",
-      "auth.logoutConfirmDescription": "You will be logged out of your account and redirected to the home page",
+      "signup.welcome":"برجاء التحقق من رقم هاتفك",
+      "signup.verificationSuccess":"تم التحقق بنجاح",
+      "signup.verificationError":"خطأ في التحقق",
+      "signup.verification":"التحقق",
+      "signup.verificationError":"خطأ في التحقق",
+      "signup.verifyOtp": "تحقق",
+      "signup.verifying": "جاري التحقق...",
+      "signup.invalidOtp": "يرجى إدخال رمز تحقق صحيح (4 أرقام)",
+      "signup.verifyOtpError": "حدث خطأ في التحقق من الرمز",
+      "signup.changePhone": "تغيير رقم الهاتف",
+      "signup.success": "تم بنجاح",
+      "signup.accountCreated": "تم إنشاء الحساب بنجاح!",
+      "signup.successDescription": "يمكنك الآن تسجيل الدخول وإدراج منتجاتك",
+
+      "auth.comeBackSoon": "يرجى العودة قريباً",
+      "auth.logoutSuccess": "تم تسجيل الخروج بنجاح",
+      "auth.logoutError": "خطأ في تسجيل الخروج",
+      "auth.logoutConfirm": "هل أنت متأكد من تسجيل الخروج؟",
+      "auth.logoutConfirmDescription": "سيتم تسجيل الخروج من حسابك وتحويلك إلى الصفحة الرئيسية",
+      "auth.logoutConfirmTitle": "تسجيل الخروج",
+   
     },
   
   },
@@ -478,7 +528,20 @@ const resources = {
       "products.sellerInfo": "Seller Information",
       "products.whatsapp": "WhatsApp",
       "products.callSeller": "Call Seller",
-
+      "products.myProducts": "My Products",
+      "products.myProductsDescription": "Manage your listed products",
+      "products.myProductsTitle": "My Products",
+      "products.myProductsDescription": "Manage your listed products",
+      "products.myProductsTitle": "My Products",
+      "products.noProducts": "No products found",
+      "products.addProduct": "Add Product",
+      "products.addFirstProduct": "Add your first product",
+      "products.deleteConfirmTitle": "Delete Product",
+      "products.deleteConfirmMessage": "Are you sure you want to delete this product?",
+      "products.deleteConfirmButton": "Delete",
+      "products.deleteConfirmCancel": "Cancel",
+      "products.deleteConfirmSuccess": "Product deleted successfully",
+    
       // Engineers
       "engineers.title": "Certified Engineers",
       "engineers.filters.location": "Location",
@@ -574,6 +637,8 @@ const resources = {
     "common.friday": "Friday",
     "common.saturday": "Saturday",
     "common.currency": "Yemeni Rial",
+
+
       // Locations
       "locations.sanaa": "Sanaa",
       "locations.aden": "Aden",
@@ -582,12 +647,28 @@ const resources = {
       "locations.ibb": "Ibb",
       "locations.hadramout": "Hadramout",
 
+
       // Payment methods
       "payment.cash": "Cash",
       "payment.checks": "Checks",
       "payment.installment": "Installment",
       "payment.bankTransfer": "Bank Transfer",
 
+      // Signup Modal
+      "signup.otpSent": "OTP sent to your phone",
+      "signup.registrationSuccess": "Registration successful",
+      "signup.registrationError": "Registration error",
+      "signup.registration": "Registration",
+      "signup.registrationError": "Registration error",
+      "signup.register": "Register",
+      "signup.verifyOtp": "Verify OTP",
+      "signup.verifying": "Verifying...",
+      "signup.invalidOtp": "Please enter a valid 4-digit code",
+      "signup.verifyOtpError": "Error verifying code",
+      "signup.changePhone": "Change Phone Number",
+      "signup.success": "Success",
+      "signup.accountCreated": "Account Created Successfully!",
+      "signup.successDescription": "You can now login and list your products",
       
 
       // Solar Calculator
@@ -770,7 +851,13 @@ const resources = {
       "auth.logoutConfirmTitle": "Logout",
       "auth.logoutConfirmDescription": "You will be logged out of your account and redirected to the home page",
     
-    
+        "signup.welcome": "Welcome to Qafzh Solar",
+        "signup.verificationSuccess": "Verification successful",
+        "signup.verificationError": "Verification error",
+        "signup.verification": "Verification",
+        "signup.verificationError": "Verification error",
+        "signup.verifyotp": "Verify OTP",
+
     },
   },
 };

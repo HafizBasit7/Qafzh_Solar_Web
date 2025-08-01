@@ -458,7 +458,7 @@ const SellingForm = ({ open, onClose }) => {
                   error={!!errors.condition}
                   sx={{ minWidth: 140 }}
                 >
-                  <InputLabel>{t("selling.condition")}</InputLabel>
+                  <InputLabel>{t("products.condition")}</InputLabel>
                   <Select
                     value={formData.condition}
                     onChange={(e) =>

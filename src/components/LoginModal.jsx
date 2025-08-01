@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Dialog,
   DialogTitle,
@@ -29,141 +29,222 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
   
   const [phoneNumber, setPhoneNumber] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
+  const [localError, setLocalError] = useState("");
   const [fieldErrors, setFieldErrors] = useState({
     phone: false,
     password: false
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Reset state when modal closes
+  // Reset state when modal opens/closes
   useEffect(() => {
     if (!open) {
-      setPhoneNumber("");
-      setPassword("");
-      setError("");
-      setFieldErrors({ phone: false, password: false });
-      clearAuthError();
+      resetForm();
     }
-  }, [open, clearAuthError]);
+  }, [open]);
 
-  // Handle authentication status changes
+  // Handle successful authentication
   useEffect(() => {
-    if (isAuthenticated && open) {
-      showSuccess(t("login.successfulLogin"), t("login.welcome"));
-      onSuccess();
+    if (isAuthenticated && open && !isSubmitting) {
+      showSuccess(t("login.successfulLogin") || "Login successful", t("login.welcome") || "Welcome");
+      onSuccess?.();
       handleClose();
     }
-  }, [isAuthenticated, open, onSuccess, showSuccess, t]);
+  }, [isAuthenticated, open, onSuccess, showSuccess, t, isSubmitting]);
 
   // Handle auth errors from context
   useEffect(() => {
     if (authError && open) {
+      console.log('🔴 Auth error detected in LoginModal:', authError);
       handleApiError(authError);
+      setIsSubmitting(false);
     }
   }, [authError, open]);
 
+  const resetForm = useCallback(() => {
+    setPhoneNumber("");
+    setPassword("");
+    setLocalError("");
+    setFieldErrors({ phone: false, password: false });
+    setIsSubmitting(false);
+    clearAuthError();
+  }, [clearAuthError]);
+
   const validateForm = () => {
-    const validationErrors = {
+    const errors = {
       phone: !phoneNumber || phoneNumber.length < 8,
-      password: !password
+      password: !password || password.length < 6
     };
     
-    if (validationErrors.phone || validationErrors.password) {
-      setFieldErrors(validationErrors);
-      setError(t("login.fillAllFields"));
-      return false;
+    setFieldErrors(errors);
+    
+    if (errors.phone && errors.password) {
+      setLocalError(t("login.fillAllFields") || "Please fill all fields");
+    } else if (errors.phone) {
+      setLocalError(t("login.invalidPhone") || "Please enter a valid phone number");
+    } else if (errors.password) {
+      setLocalError(t("login.passwordTooShort") || "Password must be at least 6 characters");
+    } else {
+      setLocalError("");
     }
     
-    return true;
+    return !errors.phone && !errors.password;
   };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = useCallback(async (e) => {
+    // CRITICAL: Always prevent default form submission
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      e.nativeEvent?.stopImmediatePropagation?.();
+      e.persist?.();
+    }
+    
+    console.log('🔵 Form submit triggered');
+    
+    // Prevent multiple submissions
+    if (isSubmitting || loginLoading) {
+      console.log('🔴 Preventing multiple submissions');
+      return;
+    }
     
     // Clear previous errors
-    setError("");
+    setLocalError("");
     setFieldErrors({ phone: false, password: false });
     clearAuthError();
-
+    
     // Validate inputs
-    if (!validateForm()) return;
-
-    try {
-      const response = await login({ phone: phoneNumber, password });
-      
-      // Only show success if login was actually successful
-      if (response?.success) {
-        showSuccess(t("login.successfulLogin"), t("login.welcome"));
-        onSuccess();
-        handleClose();
-      }
-    } catch (error) {
-      // Errors are handled through authError in context
-      console.error("Login error:", error);
+    if (!validateForm()) {
+      console.log('🔴 Form validation failed');
+      return;
     }
-  };
   
+    setIsSubmitting(true);
+  
+    console.log('🔵 Submitting login with:', { phone: phoneNumber.trim() });
+  
+    try {
+      await login({ 
+        phone: phoneNumber.trim(), 
+        password: password.trim() 
+      });
+      
+      // No need to handle success here - useEffect will handle it
+    } catch (error) {
+      console.error("🔴 Login error in handleSubmit:", error);
+      setIsSubmitting(false);
+      // Error will be handled by the authError useEffect
+    }
+  }, [phoneNumber, password, login, loginLoading, isSubmitting, clearAuthError, validateForm]);
   const handleApiError = (error) => {
     const status = error?.status || error?.response?.status;
     const errorCode = error?.code || error?.response?.data?.code;
-    let errorMessage = t("errors.default");
+    const serverMessage = error?.response?.data?.message || error?.message;
+    
+    console.log("Handling API error:", { status, errorCode, serverMessage, error });
+    
+    let errorMessage = t("errors.default") || "An error occurred";
     const newFieldErrors = { phone: false, password: false };
   
+    // Handle specific error cases
     switch (status) {
       case 400:
-        errorMessage = t("errors.badRequest");
+        errorMessage = serverMessage || t("errors.badRequest") || "Bad request";
         break;
+        
       case 401:
-        if (errorCode === 'INVALID_CREDENTIALS') {
-          errorMessage = t("login.errors.credentials");
-          newFieldErrors.password = true;
-        } else {
-          errorMessage = t("login.errors.unauthorized");
-        }
+        // Invalid credentials - wrong password for existing user
+        errorMessage = t("login.errors.credentials") || "Invalid phone number or password";
+        newFieldErrors.password = true;
         break;
+        
       case 404:
-        if (errorCode === 'USER_NOT_FOUND') {
-          errorMessage = t("login.errors.notFound");
-          newFieldErrors.phone = true;
-        } else {
-          errorMessage = t("errors.notFound");
-        }
+        // User not found - phone number not registered
+        errorMessage = t("login.errors.notFound") || "Phone number not registered";
+        newFieldErrors.phone = true;
         break;
+        
+      case 409:
+        errorMessage = t("login.errors.userExists") || "User already exists";
+        newFieldErrors.phone = true;
+        break;
+        
       case 422:
-        errorMessage = t("errors.validation");
+        errorMessage = serverMessage || t("errors.validation") || "Invalid input data";
         break;
+        
       case 500:
-        errorMessage = t("errors.server");
+      case 502:
+      case 503:
+        errorMessage = t("errors.server") || "Server error occurred";
         break;
+        
       default:
-        if (error?.message) {
-          errorMessage = error.message;
+        // Handle based on server message content if no specific status
+        if (serverMessage) {
+          const lowerMessage = serverMessage.toLowerCase();
+          
+          if (lowerMessage.includes('user not found') || 
+              lowerMessage.includes('phone not found') ||
+              lowerMessage.includes('not registered') ||
+              lowerMessage.includes('does not exist')) {
+            errorMessage = t("login.errors.notFound") || "Phone number not registered";
+            newFieldErrors.phone = true;
+          } else if (lowerMessage.includes('invalid password') || 
+                     lowerMessage.includes('wrong password') ||
+                     lowerMessage.includes('invalid credentials') || 
+                     lowerMessage.includes('incorrect password')) {
+            errorMessage = t("login.errors.credentials") || "Invalid phone number or password";
+            newFieldErrors.password = true;
+          } else if (lowerMessage.includes('already exists')) {
+            errorMessage = t("login.errors.userExists") || "User already exists";
+            newFieldErrors.phone = true;
+          } else {
+            errorMessage = serverMessage;
+          }
         }
     }
   
-    setError(errorMessage);
+    setLocalError(errorMessage);
     setFieldErrors(newFieldErrors);
-    showError(errorMessage);
+    
+    // Only show error dialog for server errors (500+)
+    if (status >= 500) {
+      showError(errorMessage);
+    }
   };
 
-  const handleClose = () => {
-    setPhoneNumber("");
-    setPassword("");
-    setError("");
-    setFieldErrors({ phone: false, password: false });
-    clearAuthError();
+  const handleClose = useCallback(() => {
+    if (isSubmitting || loginLoading) {
+      return; // Prevent closing while submitting
+    }
+    resetForm();
     onClose();
-  };
+  }, [isSubmitting, loginLoading, resetForm, onClose]);
 
-  const handleRegisterClick = (e) => {
-    e.preventDefault();
+  const handleRegisterClick = useCallback((e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     handleClose();
     // Small timeout to ensure modal close animation completes
     setTimeout(() => {
-      onOpenSignup();
-    }, 200);
+      onOpenSignup?.();
+    }, 150);
+  }, [handleClose, onOpenSignup]);
+
+  const formatPhoneNumber = (value) => {
+    // Remove all non-digits and limit to reasonable phone number length
+    return value.replace(/\D/g, "").slice(0, 15);
   };
-  
+
+  const currentError = localError || (authError?.message);
+  console.log("currentError", currentError);
+  const showUserNotFoundRegister = fieldErrors.phone && (
+    currentError === (t("login.errors.notFound") || "Phone number not registered") ||
+    currentError?.toLowerCase().includes('not found') ||
+    currentError?.toLowerCase().includes('not registered')
+  );
 
   return (
     <Dialog
@@ -171,10 +252,17 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
       onClose={handleClose}
       maxWidth="sm"
       fullWidth
+      disableEscapeKeyDown={isSubmitting || loginLoading}
       PaperProps={{
         sx: {
           borderRadius: 2,
         },
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
       }}
     >
       <DialogTitle
@@ -185,26 +273,42 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
         }}
       >
         <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-          {t("login.title")}
+          {t("login.title") || "Login"}
         </Typography>
-        <Button onClick={handleClose} sx={{ minWidth: "auto", p: 0 }}>
+        <Button 
+          onClick={handleClose} 
+          sx={{ minWidth: "auto", p: 0 }}
+          disabled={isSubmitting || loginLoading}
+        >
           <Close />
         </Button>
       </DialogTitle>
-      <form onSubmit={handleSubmit}>
+      
+      <Box 
+  component="form" 
+  onSubmit={handleSubmit} 
+  noValidate
+  sx={{ width: '100%' }}
+  
+>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            {t("login.description")}
+            {t("login.description") || "Please enter your phone number and password to login"}
           </Typography>
 
-          {error && (
+          {currentError && (
             <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-              {(error === t("login.errors.notFound") || error === t("login.errors.credentials")) && (
+              {currentError}
+              {showUserNotFoundRegister && (
                 <Box sx={{ mt: 1 }}>
-                  <Button
+                  {/* <Typography variant="body2" sx={{ mb: 1 }}>
+                    {t("login.dontHaveAccount") || "Don't have an account?"} {t("login.registerHere") || "Register here"}
+                  </Typography> */}
+                  {/* <Button
                     variant="text"
                     onClick={handleRegisterClick}
+                    size="small"
+                    type="button"
                     sx={{
                       color: "inherit",
                       textDecoration: "underline",
@@ -217,8 +321,8 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
                       },
                     }}
                   >
-                    {t("login.registerHere")}
-                  </Button>
+                    {t("login.registerHere") || "Register here"}
+                  </Button> */}
                 </Box>
               )}
             </Alert>
@@ -226,41 +330,60 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
 
           <TextField
             fullWidth
-            label={t("login.phoneNumber")}
+            label={t("login.phoneNumber") || "Phone Number"}
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, ""))}
-            placeholder={t("login.phonePlaceholder")}
+            onChange={(e) => setPhoneNumber(formatPhoneNumber(e.target.value))}
+            placeholder={t("login.phonePlaceholder") || "Enter your phone number"}
             type="tel"
+            disabled={isSubmitting || loginLoading}
             InputProps={{
               startAdornment: <Phone sx={{ mr: 1, color: "text.secondary" }} />,
             }}
             sx={{ mb: 2 }}
             error={fieldErrors.phone}
-            helperText={fieldErrors.phone ? t("login.invalidPhone") : ""}
+            helperText={fieldErrors.phone ? (t("login.invalidPhone") || "Invalid phone number") : ""}
+            required
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSubmit(e);
+              }
+            }}
           />
 
           <TextField
             fullWidth
-            label={t("login.password")}
+            label={t("login.password") || "Password"}
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            placeholder={t("login.passwordPlaceholder")}
+            placeholder={t("login.passwordPlaceholder") || "Enter your password"}
+            disabled={isSubmitting || loginLoading}
             InputProps={{
               startAdornment: <Lock sx={{ mr: 1, color: "text.secondary" }} />,
             }}
             sx={{ mb: 2 }}
             error={fieldErrors.password}
-            helperText={fieldErrors.password ? t("login.invalidCredentials") : ""}
+            helperText={fieldErrors.password ? (t("login.invalidCredentials") || "Invalid credentials") : ""}
+            required
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault();
+                handleSubmit(e);
+              }
+            }}
           />
 
           <Box sx={{ textAlign: "center", mt: 3 }}>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-              {t("login.noAccount")}
+              {t("login.noAccount") || "Don't have an account?"}
             </Typography>
             <Button
               variant="text"
               onClick={handleRegisterClick}
+              disabled={isSubmitting || loginLoading}
+              type="button"
               sx={{
                 color: "#2e7d32",
                 textTransform: 'none',
@@ -270,28 +393,36 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
                 },
               }}
             >
-              {t("login.registerHere")}
+              {t("login.registerHere") || "Register here"}
             </Button>
           </Box>
         </DialogContent>
+        
         <DialogActions sx={{ p: 3, pt: 0 }}>
-          <Button onClick={handleClose} variant="outlined">
-            {t("login.cancel")}
+          <Button 
+            onClick={handleClose} 
+            variant="outlined"
+            disabled={isSubmitting || loginLoading}
+            type="button"
+          >
+            {t("login.cancel") || "Cancel"}
           </Button>
           <Button
             type="submit"
             variant="contained"
-            disabled={loginLoading}
-            startIcon={loginLoading ? <CircularProgress size={20} /> : null}
+            disabled={isSubmitting || loginLoading || !phoneNumber || !password}
+            startIcon={(isSubmitting || loginLoading) ? <CircularProgress size={20} /> : null}
             sx={{
               backgroundColor: "#2e7d32",
               "&:hover": { backgroundColor: "#1b5e20" },
+              minWidth: 120,
             }}
           >
-            {loginLoading ? t("login.loggingIn") : t("login.login")}
+            {(isSubmitting || loginLoading) ? (t("login.loggingIn") || "Logging in...") : (t("login.login") || "Login")}
           </Button>
         </DialogActions>
-      </form>
+      </Box>
+
     </Dialog>
   );
 };

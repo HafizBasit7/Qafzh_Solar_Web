@@ -64,21 +64,19 @@ const useAuth = () => {
     }
   };
 
-
-  
   // Register mutation
-// Register mutation
-const registerMutation = useMutation({
-  mutationFn: (data) => authAPI.register(data),
-  onSuccess: (response) => {
-    console.log('🔐 Registration successful:', response);
-    return response; // Make sure to return the response
-  },
-  onError: (error) => {
-    console.error('🔐 Registration error:', error);
-    throw error; // Throw error to be caught in the component
-  }
-});
+  const registerMutation = useMutation({
+    mutationFn: (data) => authAPI.register(data),
+    onSuccess: (response) => {
+      console.log('🔐 Registration successful:', response);
+      setAuthError(null); // Clear any previous errors
+      return response;
+    },
+    onError: (error) => {
+      console.error('🔐 Registration error:', error);
+      setAuthError(error);
+    }
+  });
 
   // Verify OTP mutation
   const verifyOTPMutation = useMutation({
@@ -89,12 +87,15 @@ const registerMutation = useMutation({
         await saveAuthData(response);
         setIsAuthenticated(true);
         setUserData(response.data.user);
+        setAuthError(null); // Clear any previous errors
       } catch (error) {
         console.error('🔐 Error in OTP success handler:', error);
+        setAuthError(error);
       }
     },
     onError: (error) => {
       console.error('🔐 OTP verification error:', error);
+      setAuthError(error);
     }
   });
 
@@ -103,27 +104,40 @@ const registerMutation = useMutation({
     mutationFn: (phone) => authAPI.requestOTP(phone),
     onSuccess: (response) => {
       console.log('🔐 OTP request successful:', response);
+      setAuthError(null); // Clear any previous errors
     },
     onError: (error) => {
       console.error('🔐 OTP request error:', error);
+      setAuthError(error);
     }
   });
 
-  // Login mutation
+  // Login mutation - FIXED VERSION
   const loginMutation = useMutation({
-    mutationFn: (data) => authAPI.login(data),
+    mutationFn: (data) => {
+      console.log('🔐 Login mutation called with:', data);
+      return authAPI.login(data);
+    },
     onSuccess: async (response) => {
       try {
         console.log('🔐 Login successful:', response);
         await saveAuthData(response);
         setIsAuthenticated(true);
         setUserData(response.data.user);
+        setAuthError(null); // Clear any previous errors
       } catch (error) {
         console.error('🔐 Error in login success handler:', error);
+        setAuthError(error);
       }
     },
     onError: (error) => {
-      console.error('🔐 Login error:', error);
+      console.error('🔐 Login error details:', {
+        error,
+        status: error?.status || error?.response?.status,
+        message: error?.message || error?.response?.data?.message,
+        data: error?.response?.data
+      });
+      setAuthError(error);
     }
   });
 
@@ -134,6 +148,11 @@ const registerMutation = useMutation({
       console.log('🔐 Logout successful');
       setIsAuthenticated(false);
       setUserData(null);
+      setAuthError(null);
+      
+      // Clear storage
+      storage.clearAuthData();
+      updateApiToken(null);
       
       // Clear user data from query cache
       queryClient.removeQueries(['user']);
@@ -146,6 +165,9 @@ const registerMutation = useMutation({
       // Even if logout API fails, clear local state
       setIsAuthenticated(false);
       setUserData(null);
+      setAuthError(null);
+      storage.clearAuthData();
+      updateApiToken(null);
       queryClient.removeQueries(['user']);
     }
   });
@@ -194,9 +216,29 @@ const registerMutation = useMutation({
     logoutMutation.mutate();
   }, [logoutMutation]);
 
-  const clearAuthError = () => {
+  // Clear auth error function
+  const clearAuthError = useCallback(() => {
+    console.log('🔐 Clearing auth error');
     setAuthError(null);
-  };
+  }, []);
+
+  // Login function that returns a promise - FIXED VERSION
+  const login = useCallback(async (data) => {
+    console.log('🔐 Login function called with:', data);
+    try {
+      // Clear previous error before attempting login
+      setAuthError(null);
+      
+      // Use mutateAsync to get a promise that we can await
+      const response = await loginMutation.mutateAsync(data);
+      console.log('🔐 Login mutateAsync response:', response);
+      return response;
+    } catch (error) {
+      console.error('🔐 Login function error:', error);
+      // The error is already set in the onError callback, just throw it
+      throw error;
+    }
+  }, [loginMutation]);
 
   return {
     isInitialized,
@@ -220,8 +262,8 @@ const registerMutation = useMutation({
     requestOTPLoading: requestOTPMutation.isPending,
     requestOTPError: requestOTPMutation.error,
     
-    // Login
-    login: loginMutation.mutate,
+    // Login - FIXED VERSION
+    login, // This now returns a promise
     loginLoading: loginMutation.isPending,
     loginError: loginMutation.error,
     

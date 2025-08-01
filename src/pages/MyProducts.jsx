@@ -116,12 +116,12 @@ const MyProducts = () => {
             <ArrowBack />
           </IconButton>
           <Typography variant="h5" sx={{ ml: 1, fontWeight: "bold" }}>
-            {t("product.myProducts")}
+            {t("products.myProducts")}
           </Typography>
         </Box>
         <Inventory sx={{ fontSize: 80, color: "text.disabled", my: 3 }} />
         <Typography variant="h6" sx={{ mb: 2 }}>
-          {t("product.noProducts")}
+          {t("products.noProducts")}
         </Typography>
         
         <Button
@@ -133,7 +133,7 @@ const MyProducts = () => {
             "&:hover": { backgroundColor: "#1a9c4a" },
           }}
         >
-          {t("product.addFirstProduct")}
+          {t("products.addFirstProduct")}
         </Button>
         <SellingForm
           open={openSellingForm}
@@ -175,7 +175,7 @@ const MyProducts = () => {
                 fontSize: isMobile ? "1.25rem" : "1.5rem",
               }}
             >
-              {t("product.myProducts")}
+              {t("products.myProducts")}
               <Typography
                 component="span"
                 sx={{
@@ -199,7 +199,7 @@ const MyProducts = () => {
               }}
               onClick={() => setOpenSellingForm(true)}
             >
-              {t("product.addProduct")}
+              {t("products.addProduct")}
             </Button>
           </Box>
         </Container>
@@ -260,8 +260,8 @@ const MyProducts = () => {
                     <Pending sx={{ fontSize: "1rem", mr: 0.5 }} />
                   )}
                   {product.status === "approved"
-                    ? t("product.approved")
-                    : t("product.pending")}
+                    ? t("products.approved")
+                    : t("products.pending")}
                 </Box>
                 
                 {/* Delete Button */}
@@ -333,9 +333,9 @@ const MyProducts = () => {
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle>{t("product.deleteConfirmTitle")}</DialogTitle>
+        <DialogTitle>{t("products.deleteConfirmTitle")}</DialogTitle>
         <DialogContent>
-          <Typography>{t("product.deleteConfirmMessage")}</Typography>
+          <Typography>{t("products.deleteConfirmMessage")}</Typography>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setDeleteConfirmOpen(false)}>
