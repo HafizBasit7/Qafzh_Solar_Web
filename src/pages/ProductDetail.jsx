@@ -135,7 +135,7 @@ const ProductDetail = () => {
         display: 'flex', 
         alignItems: 'center', 
         mb: 3, 
-        bgcolor: '#16A34A',
+        bgcolor: '#02ff04',
         p: 2,
         borderRadius: 2,
         color: 'white'
@@ -341,7 +341,7 @@ const ProductDetail = () => {
                 <Stack spacing={2}>
                   {product.phone && (
                     <Typography variant="body1">
-                      <Phone sx={{ mr: 1, color: '#16A34A', fontSize: 20 }} />
+                      <Phone sx={{ mr: 1, color: '#02ff04', fontSize: 20 }} />
                       {product.phone}
                     </Typography>
                   )}
@@ -386,7 +386,7 @@ const ProductDetail = () => {
                   onClick={handleCallSeller}
                   fullWidth
                   sx={{
-                    bgcolor: '#16A34A',
+                    bgcolor: '#02ff04',
                     '&:hover': { bgcolor: '#15803D' },
                     py: 1.5,
                     borderRadius: 3

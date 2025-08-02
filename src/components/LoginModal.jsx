@@ -246,6 +246,8 @@ const LoginModal = ({ open, onClose, onSuccess, onOpenSignup }) => {
     currentError?.toLowerCase().includes('not registered')
   );
 
+  
+
   return (
     <Dialog
       open={open}
