@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   AppBar,
@@ -564,11 +565,11 @@ const Navbar = ({ language, onLanguageToggle }) => {
             </Box>
 
             {/* Debug Info - Remove this in production */}
-            {process.env.NODE_ENV === 'development' && (
+            {/* {process.env.NODE_ENV === 'development' && (
               <Typography variant="caption" color="text.disabled">
                 Debug: {JSON.stringify(Object.keys(user || {})).slice(0, 50)}...
               </Typography>
-            )}
+            )} */}
 
             {(user?.isVerified || user?.verified) && (
               <Box sx={{ display: "flex", alignItems: "center" }}>

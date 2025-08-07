@@ -5,7 +5,8 @@ import { uploadAPI } from '../utils/imageUpload';
 
 // Base URL for API requests
 // const BASE_URL = 'https://srv694651.hstgr.cloud/solar/api/v1';
-const BASE_URL = 'http://localhost:5005/api/v1';
+// const BASE_URL = 'http://localhost:5005/api/v1';
+const BASE_URL = 'https://srv694651.hstgr.cloud/solar/api/v1'; 
 
 // Create axios instance
 const api = axios.create({
