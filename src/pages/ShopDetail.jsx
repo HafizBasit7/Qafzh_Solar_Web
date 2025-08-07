@@ -116,7 +116,7 @@ const ShopDetail = () => {
         display: 'flex', 
         alignItems: 'center', 
         mb: 3, 
-        bgcolor: '#02ff04',
+        bgcolor: '#2e7d32',
         p: 2,
         borderRadius: 2,
         color: 'white'
@@ -195,7 +195,7 @@ const ShopDetail = () => {
             onClick={handleCall}
             disabled={!shop.phone}
             sx={{
-              bgcolor: '#02ff04',
+              bgcolor: '#2e7d32',
               '&:hover': { bgcolor: '#15803D' },
               py: 1.5,
               borderRadius: 3
@@ -250,19 +250,19 @@ const ShopDetail = () => {
             <Stack spacing={2}>
               {shop.address && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <LocationOn sx={{ color: '#02ff04' }} />
+                  <LocationOn sx={{ color: '#2e7d32' }} />
                   <Typography>{shop.address}</Typography>
                 </Box>
               )}
               {shop.phone && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Phone sx={{ color: '#02ff04' }} />
+                  <Phone sx={{ color: '#2e7d32' }} />
                   <Typography>{shop.phone}</Typography>
                 </Box>
               )}
               {shop.email && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Email sx={{ color: '#02ff04' }} />
+                  <Email sx={{ color: '#2e7d32' }} />
                   <Typography>{shop.email}</Typography>
                 </Box>
               )}
@@ -304,7 +304,7 @@ const ShopDetail = () => {
               <Stack spacing={2}>
                 {shop.workingHours.openTime && shop.workingHours.closeTime && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                    <Schedule sx={{ color: '#02ff04' }} />
+                    <Schedule sx={{ color: '#2e7d32' }} />
                     <Typography>
                       {shop.workingHours.openTime} - {shop.workingHours.closeTime}
                     </Typography>
@@ -347,7 +347,7 @@ const ShopDetail = () => {
                       '&:hover': { bgcolor: '#F1F5F9' }
                     }}
                   >
-                    <Facebook sx={{ color: '#1877F2' }} />
+                    <Facebook sx={{ color: '#2e7d32' }} />
                   </IconButton>
                 )}
                 {shop.socialMedia.instagram && (
@@ -467,7 +467,7 @@ const ShopDetail = () => {
             <Stack spacing={2}>
               {shop.establishedYear && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Business sx={{ color: '#02ff04' }} />
+                  <Business sx={{ color: '#2e7d32' }} />
                   <Typography>
                     {t("shops.establishedYear")}: {shop.establishedYear}
                   </Typography>
@@ -475,7 +475,7 @@ const ShopDetail = () => {
               )}
               {shop.licenseNumber && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <VerifiedUser sx={{ color: '#02ff04' }} />
+                  <VerifiedUser sx={{ color: '#2e7d32' }} />
                   <Typography>
                     {t("shops.licenseNumber")}: {shop.licenseNumber}
                   </Typography>
@@ -483,7 +483,7 @@ const ShopDetail = () => {
               )}
               {shop.website && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Language sx={{ color: '#02ff04' }} />
+                  <Language sx={{ color: '#2e7d32' }} />
                   <Typography>
                     <a href={shop.website.startsWith('http') ? shop.website : `https://${shop.website}`} target="_blank" rel="noopener noreferrer">
                       {shop.website}
@@ -493,7 +493,7 @@ const ShopDetail = () => {
               )}
               {shop.notes && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Notes sx={{ color: '#02ff04' }} />
+                  <Notes sx={{ color: '#2e7d32' }} />
                   <Typography>{shop.notes}</Typography>
                 </Box>
               )}

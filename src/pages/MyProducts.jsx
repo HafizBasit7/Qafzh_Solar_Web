@@ -62,6 +62,12 @@ const MyProducts = () => {
     await refetch();
     setRefreshing(false);
   };
+  const CURRENCY_SYMBOLS = {
+    USD: "$",
+    SAR: "ر.س",
+    YER: "﷼ ",
+    YER_SOUTH: "﷼ ج"
+  };
 
   const handleDeleteClick = (productId) => {
     setProductToDelete(productId);
@@ -116,7 +122,7 @@ const MyProducts = () => {
             <ArrowBack />
           </IconButton>
           <Typography variant="h5" sx={{ ml: 1, fontWeight: "bold" }}>
-            {t("products.myProducts")}
+            {t("commmon.approved")}
           </Typography>
         </Box>
         <Inventory sx={{ fontSize: 80, color: "text.disabled", my: 3 }} />
@@ -260,8 +266,8 @@ const MyProducts = () => {
                     <Pending sx={{ fontSize: "1rem", mr: 0.5 }} />
                   )}
                   {product.status === "approved"
-                    ? t("products.approved")
-                    : t("products.pending")}
+                    ? t("commmon.approved")
+                    : t("commmon.pending")}
                 </Box>
                 
                 {/* Delete Button */}
@@ -317,7 +323,7 @@ const MyProducts = () => {
                       fontSize: isMobile ? "0.875rem" : "1rem",
                     }}
                   >
-                    ${product.price}
+                     {product.price} {CURRENCY_SYMBOLS[product.currency] || product.currency}
                   </Typography>
                 </CardContent>
               </Card>

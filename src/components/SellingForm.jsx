@@ -63,7 +63,7 @@ const SellingForm = ({ open, onClose }) => {
     isNegotiable: true,
     isActive: true,
     isFeatured: false,
-    status: 'pending'
+    status: 'approved'
   });
 
   const [errors, setErrors] = useState({});
@@ -103,28 +103,47 @@ const SellingForm = ({ open, onClose }) => {
 
   // Yemeni governorates
   const governorates = [
-    "Sana'a", "Aden", "Taiz", "Al Hudaydah", "Ibb", "Dhamar",
-    "Al Mahwit", "Raymah", "Al Jawf", "Marib", "Al Bayda",
-    "Shabwah", "Hadramaut", "Al Mahrah", "Sa'dah", "Hajjah",
-    "Amran", "Lahij", "Abyan", "Al Dhale'e",
+    "صنعاء", "عدن", "تعز", "الحديدة", "إب", "ذمار",
+    "المحويت", "ريمة", "الجوف", "مأرب", "البيضاء",
+    "شبوة", "حضرموت", "المهرة", "صعدة", "حجة",
+    "عمران", "لحج", "أبين", "الضالع",
   ];
-
+  
   // Common solar product brands
-  const commonBrands = [
-    "SMA", "Fronius", "Sungrow", "Growatt", "Solis", "Victron Energy",
-    "Schneider Electric", "ABB", "Delta", "Kaco", "Canadian Solar",
-    "Jinko Solar", "Trina Solar", "Longi", "JA Solar", "Hanwha Q-Cells",
-    "LG Solar", "Panasonic", "SunPower", "First Solar", "Other",
-  ];
+const commonBrands = [
+  "إس إم إيه",        // SMA
+  "فرونياس",         // Fronius
+  "سونغرو",          // Sungrow
+  "جروات",           // Growatt
+  "سوليس",           // Solis
+  "فيكترون إنرجي",   // Victron Energy
+  "شنايدر إلكتريك",  // Schneider Electric
+  "إيه بي بي",        // ABB
+  "دلتا",            // Delta
+  "كاكو",            // Kaco
+  "كنيديان سولار",   // Canadian Solar
+  "جينكو سولار",     // Jinko Solar
+  "ترينا سولار",     // Trina Solar
+  "لونجي",           // Longi
+  "جيه إيه سولار",   // JA Solar
+  "هانوا كيو-سيلز",  // Hanwha Q-Cells
+  "إل جي سولار",     // LG Solar
+  "باناسونيك",       // Panasonic
+  "صن باور",         // SunPower
+  "فيرست سولار",     // First Solar
+  "أخرى",            // Other
+];
+
 
   // Update these arrays to match your Postman values
-  const productTypes = ["Inverter", "Panel", "Battery", "Cables", "Controller", "Full Kit", "Others"];
+  const productTypes = ["Inverter", "Panel", "Battery", "Panel bases","Accessory", "Others"];
   const productConditions = ["New", "Used", "Needs Repair"];
 
   const currencies = [
     { code: "YER", symbol: "﷼", name: "Yemeni Rial" },
-    { code: "SAR", symbol: "﷼", name: "Saudi Riyal" },
+    { code: "SAR", symbol: "ر.س", name: "Saudi Riyal" },
     { code: "USD", symbol: "$", name: "US Dollar" },
+    { code: "YER_SOUTH", symbol: "﷼ ج", name: "Yemeni Rial South" },
   ];
 
   const handleInputChange = (field, value) => {
@@ -207,9 +226,9 @@ const SellingForm = ({ open, onClose }) => {
     if (!formData.condition) {
       newErrors.condition = "Product condition is required";
     }
-    if (!formData.brand) {
-      newErrors.brand = "Brand is required";
-    }
+    // if (!formData.brand) {
+    //   newErrors.brand = "Brand is required";
+    // }
     if (!formData.price) {
       newErrors.price = "Price is required";
     }
@@ -227,6 +246,11 @@ const SellingForm = ({ open, onClose }) => {
     if (!formData.description.trim()) {
       newErrors.description = "Description is required";
     }
+    if (!formData.city) {
+      newErrors.city = t("validation.cityRequired"); // Use translation if available
+    }
+    
+ 
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -322,7 +346,7 @@ const SellingForm = ({ open, onClose }) => {
       isNegotiable: true,
       isActive: true,
       isFeatured: false,
-      status: 'pending'
+      status: 'approved'
     });
     setErrors({});
     setImageFiles([]);
@@ -407,23 +431,11 @@ const SellingForm = ({ open, onClose }) => {
               </Alert>
             )}
 
-            <Grid container spacing={3}>
-              {/* Product Name */}
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  required
-                  label={t("selling.name")}
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  error={!!errors.name}
-                  helperText={errors.name}
-                  placeholder={t("selling.namePlaceholder")}
-                />
-              </Grid>
 
-              {/* Product Type */}
-              <Grid item xs={12} md={6}>
+            
+            <Grid container spacing={3}>
+               {/* Product Type */}
+               <Grid item xs={12} md={6}>
                 <FormControl
                   fullWidth
                   error={!!errors.type}
@@ -450,6 +462,22 @@ const SellingForm = ({ open, onClose }) => {
                   )}
                 </FormControl>
               </Grid>
+              
+              {/* Product Name */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  required
+                  label={t("selling.name")}
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  error={!!errors.name}
+                  helperText={errors.name}
+                  placeholder={t("selling.namePlaceholder")}
+                />
+              </Grid>
+
+             
 
               {/* Product Condition */}
               <Grid item xs={12} md={6}>
@@ -481,7 +509,7 @@ const SellingForm = ({ open, onClose }) => {
               </Grid>
 
               {/* Brand */}
-              <Grid item xs={12} md={6}>
+              {/* <Grid item xs={12} md={6}>
                 <FormControl
                   fullWidth
                   error={!!errors.brand}
@@ -505,10 +533,10 @@ const SellingForm = ({ open, onClose }) => {
                     </Typography>
                   )}
                 </FormControl>
-              </Grid>
+              </Grid> */}
 
               {/* Model */}
-              <Grid item xs={12} md={6}>
+              {/* <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   label={t("selling.model")}
@@ -516,7 +544,7 @@ const SellingForm = ({ open, onClose }) => {
                   onChange={(e) => handleInputChange("model", e.target.value)}
                   placeholder={t("selling.modelPlaceholder")}
                 />
-              </Grid>
+              </Grid> */}
 
               {/* Price and Currency */}
               <Grid item xs={12} md={6}>
@@ -646,7 +674,7 @@ const SellingForm = ({ open, onClose }) => {
               </Grid>
 
               {/* Specifications Section */}
-              <Grid item xs={12}>
+              {/* <Grid item xs={12}>
                 <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
                   {t("selling.specifications")}
                 </Typography>
@@ -688,7 +716,7 @@ const SellingForm = ({ open, onClose }) => {
                     />
                   </Grid>
                 </Grid>
-              </Grid>
+              </Grid> */}
 
               {/* Negotiable Toggle */}
               <Grid item xs={12}>

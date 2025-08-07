@@ -11,6 +11,7 @@ const resources = {
       "nav.calculator": "الحاسبة الشمسية",
       "nav.brand": "قافزة الشمسية",
       "nav.shopAds": "إعلانات المحلات",
+      "nav.home" : "الرئيسية",
 
       // Homepage
       "home.hero.title": "قافزة الشمسية",
@@ -45,16 +46,19 @@ const resources = {
       // Products
       "products.title": "المنتجات الشمسية",
       "products.filters.title": "الفلاتر",
-      "products.filters.search": "البحث",
-      "products.filters.category": "الفئة",
+      "products.filters.search": "ابحث في المنتجات الشمسية...",
+      "products.filters.category": " أنواع المنتجات",
       "products.filters.brand": "العلامة التجارية",
       "products.filters.price": "نطاق السعر (ريال يمني)",
       "products.filters.condition": "الحالة",
       "products.filters.governorate": "المحافظة",
       "products.filters.sort": "ترتيب حسب",
-      "products.filters.all": "الكل",
+      "products.filters.all": 'كل المناطق',
+      "products.filters.activeFilters":"المرشحات النشطة",
       "products.categories.solar": "ألواح شمسية",
       "products.categories.batteries": "بطاريات",
+      "products.categories.panel_base":"قواعد الألواح",
+      "products.categories.others": "أخرى",
       "products.categories.inverters": "محولات",
       "products.categories.accessories": "ملحقات",
       "products.viewDetails": "عرض التفاصيل",
@@ -186,7 +190,7 @@ const resources = {
     "commmon.rejected": "مرفوض",
     "commmon.expired": "منتهي",
     "commmon.active": "مفعل",
-    "commmon.approved": "موافق",
+   
     "commmon.pending": "قيد المراجعة",
     "common.sunday": "الأحد",
     "common.monday": "الاثنين",
@@ -449,6 +453,7 @@ const resources = {
       "nav.calculator": "Calculator",
       "nav.brand": "Qafzh Solar",
       "nav.shopAds": "Shop Ads",
+      "nav.home" : "Home",
 
       // Homepage
       "home.hero.title": "Qafzh Solar",
@@ -493,10 +498,13 @@ const resources = {
       "products.filters.governorate": "Governorate",
       "products.filters.sort": "Sort By",
       "products.filters.all": "All",
+      "products.filters.activeFilters":"Active Filters",
       "products.categories.solar": "Solar Panels",
       "products.categories.batteries": "Batteries",
       "products.categories.inverters": "Inverters",
       "products.categories.accessories": "Accessories",
+      "products.categories.panel_base":"Panel Base",
+      "products.categories.others":"Others",
       "products.viewDetails": "View Details",
       "products.noResults": "No products found matching search criteria",
       "products.details": "Product Details",
@@ -591,6 +599,8 @@ const resources = {
       "shops.additionalInfo": "Additional Information",
       "shops.establishedYear": "Established Year",
       "shops.licenseNumber": "License Number",
+      "commmon.approved": "Approved",
+      "commmon.pending": "Pending",
 
       // Common
       "common.back": "Back",

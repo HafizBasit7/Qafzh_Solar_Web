@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -20,6 +20,9 @@ import {
   Stack,
   Skeleton,
   Alert,
+  Dialog,
+  DialogContent,
+  IconButton
 } from "@mui/material";
 import {
   ArrowBack,
@@ -35,6 +38,10 @@ import {
   GridOn as GridOnIcon,
   BatteryChargingFull as BatteryIcon,
   Power as PowerIcon,
+  ZoomIn,
+  ChevronLeft,
+  ChevronRight,
+  Close
 } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { useProduct, useUpdateProductViews } from "../hooks/useProducts";
@@ -45,6 +52,19 @@ const ProductDetail = () => {
   const { t } = useTranslation();
   const { data: product, isLoading, isError, error } = useProduct(id);
   const updateViewsMutation = useUpdateProductViews();
+  const [selectedImage, setSelectedImage] = useState(0);
+  const [openLightbox, setOpenLightbox] = useState(false);
+
+
+  const PRODUCT_TYPES = useMemo(() => [
+    { id: "all", name: t("products.filters.all"), icon: null },
+    { id: "Panel", name: t("products.categories.solar")},
+    { id: "Inverter", name: t("products.categories.inverters") },
+    { id: "Battery", name: t("products.categories.batteries") },
+    { id: "Panel bases", name: t("products.categories.panel_base") },
+    { id: "Accessory", name: t("products.categories.accessories") },
+    { id: "Other", name: t("products.categories.others") },
+  ], [t]);
 
   // Update view count when product loads
   useEffect(() => {
@@ -58,6 +78,19 @@ const ProductDetail = () => {
     window.location.href = `tel:${product.phone}`;
   };
 
+  const handleImageClick = (index) => {
+    setSelectedImage(index);
+    setOpenLightbox(true);
+  };
+
+  const handleNextImage = () => {
+    setSelectedImage((prev) => (prev + 1) % product.images.length);
+  };
+
+  const handlePrevImage = () => {
+    setSelectedImage((prev) => (prev - 1 + product.images.length) % product.images.length);
+  };
+  
   const handleWhatsApp = () => {
     if (!product?.whatsappPhone) return;
     const message = encodeURIComponent(
@@ -87,7 +120,7 @@ const ProductDetail = () => {
         </Alert>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate("/products")}
+          onClick={() => navigate("/")}
           sx={{ mt: 2 }}
         >
           {t("common.back")}
@@ -121,11 +154,13 @@ const ProductDetail = () => {
     if (!price) return t("products.priceNotAvailable");
     const formatted = new Intl.NumberFormat().format(price);
     switch (currency) {
-      case "USD": return `$${formatted}`;
-      case "SAR": return `${formatted} SAR`;
-      case "YER": return `${formatted} YER`;
+      case "USD": return `$${formatted}`;               // US Dollar (symbol before)
+      case "SAR": return `${formatted} ر.س`;           // Saudi Riyal (Arabic symbol after)
+      case "YER": return `${formatted} ﷼`;             // Northern Yemeni Rial (Arabic symbol)
+      case "YER_SOUTH": return `${formatted} ﷼ ج`;     // Southern Yemeni Rial (with ج for جنوبي)
       default: return `${formatted} ${currency || ''}`;
     }
+    
   };
 
   return (
@@ -135,14 +170,14 @@ const ProductDetail = () => {
         display: 'flex', 
         alignItems: 'center', 
         mb: 3, 
-        bgcolor: '#02ff04',
+        bgcolor: '#2e7d32',
         p: 2,
         borderRadius: 2,
         color: 'white'
       }}>
         <Button
           startIcon={<ArrowBack />}
-          onClick={() => navigate("/products")}
+          onClick={() => navigate("/")}
           sx={{ color: 'white', fontWeight: "bold" }}
         >
           {t("common.back")}
@@ -177,18 +212,204 @@ const ProductDetail = () => {
                 }}
               />
             )}
-            <CardMedia
-              component="img"
-              image={product.images?.[0] || "/placeholder-product.jpg"}
-              alt={product.name}
-              sx={{
-                width: "100%",
-                height: 400,
-                objectFit: "cover",
-              }}
-            />
+           {/* Main Image with Zoom */}
+           <Box sx={{ position: 'relative' }}>
+              <CardMedia
+                component="img"
+                image={product.images?.[selectedImage] || "/placeholder-product.jpg"}
+                alt={product.name}
+                sx={{
+                  width: "100%",
+                  height: 400,
+                  objectFit: "cover",
+                  cursor: 'pointer',
+                }}
+                onClick={() => handleImageClick(selectedImage)}
+              />
+              {product.images?.length > 1 && (
+                <IconButton
+                  sx={{
+                    position: 'absolute',
+                    bottom: 16,
+                    right: 16,
+                    bgcolor: 'rgba(0,0,0,0.5)',
+                    color: 'white',
+                    '&:hover': {
+                      bgcolor: 'rgba(0,0,0,0.7)',
+                    }
+                  }}
+                  onClick={() => handleImageClick(selectedImage)}
+                >
+                  <ZoomIn />
+                </IconButton>
+              )}
+            </Box>
+
+            {/* Thumbnail Gallery */}
+            {product.images?.length > 1 && (
+              <Box sx={{
+                display: 'flex',
+                gap: 1,
+                p: 2,
+                overflowX: 'auto',
+                bgcolor: 'background.paper',
+                borderTop: '1px solid',
+                borderColor: 'divider'
+              }}>
+                {product.images.map((img, index) => (
+                  <Box
+                    key={index}
+                    sx={{
+                      width: 80,
+                      height: 80,
+                      flexShrink: 0,
+                      position: 'relative',
+                      cursor: 'pointer',
+                      border: selectedImage === index ? '2px solid' : '1px solid',
+                      borderColor: selectedImage === index ? 'primary.main' : 'divider',
+                      borderRadius: 1,
+                      overflow: 'hidden',
+                      '&:hover': {
+                        borderColor: 'primary.main',
+                      }
+                    }}
+                    onClick={() => setSelectedImage(index)}
+                  >
+                    <CardMedia
+                      component="img"
+                      image={img}
+                      alt={`${product.name} - ${index + 1}`}
+                      sx={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                  </Box>
+                ))}
+              </Box>
+            )}
           </Paper>
         </Grid>
+
+              {/* Lightbox Dialog */}
+      <Dialog
+        open={openLightbox}
+        onClose={() => setOpenLightbox(false)}
+        maxWidth="md"
+        fullWidth
+        sx={{
+          '& .MuiDialog-paper': {
+            bgcolor: 'rgba(0,0,0,0.9)',
+            overflow: 'hidden',
+          }
+        }}
+      >
+        <DialogContent sx={{ p: 0, position: 'relative' }}>
+          <IconButton
+            sx={{
+              position: 'absolute',
+              top: 8,
+              right: 8,
+              color: 'white',
+              zIndex: 1,
+              bgcolor: 'rgba(0,0,0,0.5)',
+              '&:hover': {
+                bgcolor: 'rgba(0,0,0,0.7)',
+              }
+            }}
+            onClick={() => setOpenLightbox(false)}
+          >
+            <Close />
+          </IconButton>
+
+          {product.images?.length > 1 && (
+            <>
+              <IconButton
+                sx={{
+                  position: 'absolute',
+                  left: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'white',
+                  zIndex: 1,
+                  bgcolor: 'rgba(0,0,0,0.5)',
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.7)',
+                  }
+                }}
+                onClick={handlePrevImage}
+              >
+                <ChevronLeft fontSize="large" />
+              </IconButton>
+              <IconButton
+                sx={{
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  color: 'white',
+                  zIndex: 1,
+                  bgcolor: 'rgba(0,0,0,0.5)',
+                  '&:hover': {
+                    bgcolor: 'rgba(0,0,0,0.7)',
+                  }
+                }}
+                onClick={handleNextImage}
+              >
+                <ChevronRight fontSize="large" />
+              </IconButton>
+            </>
+          )}
+
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              height: '80vh',
+              p: 2
+            }}
+          >
+            <CardMedia
+              component="img"
+              image={product.images?.[selectedImage] || "/placeholder-product.jpg"}
+              alt={product.name}
+              sx={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain'
+              }}
+            />
+          </Box>
+
+          {product.images?.length > 1 && (
+            <Box sx={{
+              position: 'absolute',
+              bottom: 16,
+              left: 0,
+              right: 0,
+              display: 'flex',
+              justifyContent: 'center',
+              gap: 1
+            }}>
+              {product.images.map((_, index) => (
+                <Box
+                  key={index}
+                  sx={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    bgcolor: selectedImage === index ? 'primary.main' : 'rgba(255,255,255,0.5)',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setSelectedImage(index)}
+                />
+              ))}
+            </Box>
+          )}
+        </DialogContent>
+      </Dialog>
 
         {/* Product Info */}
         <Grid item xs={12} md={6}>
@@ -207,7 +428,7 @@ const ProductDetail = () => {
                       {t("products.type")}
                     </Typography>
                     <Typography variant="body1" fontWeight="bold">
-                      {product.type || t("products.notSpecified")}
+                      {PRODUCT_TYPES.find(t => t.id === product.type)?.name || t("products.notSpecified")}
                     </Typography>
                   </Stack>
                 </Paper>
@@ -282,7 +503,7 @@ const ProductDetail = () => {
             </Box>
 
             {/* Specifications */}
-            <Box sx={{ mb: 3 }}>
+            {/* <Box sx={{ mb: 3 }}>
               <Typography variant="h6" gutterBottom fontWeight="bold">
                 {t("products.specifications")}
               </Typography>
@@ -300,7 +521,7 @@ const ProductDetail = () => {
                   ))}
                 </Grid>
               </Paper>
-            </Box>
+            </Box> */}
 
             {/* Status Section */}
             <Box sx={{ mb: 3 }}>
@@ -332,70 +553,55 @@ const ProductDetail = () => {
               </Paper>
             </Box>
 
-            {/* Contact Info */}
-            <Box sx={{ mb: 3 }}>
-              <Typography variant="h6" gutterBottom fontWeight="bold">
-                {t("common.contactInfo")}
-              </Typography>
-              <Paper sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: 3 }}>
-                <Stack spacing={2}>
-                  {product.phone && (
-                    <Typography variant="body1">
-                      <Phone sx={{ mr: 1, color: '#02ff04', fontSize: 20 }} />
-                      {product.phone}
-                    </Typography>
-                  )}
-                  {product.whatsappPhone && (
-                    <Typography variant="body1">
-                      <WhatsApp sx={{ mr: 1, color: '#25D366', fontSize: 20 }} />
-                      {product.whatsappPhone}
-                    </Typography>
-                  )}
-                  {product.locationText && (
-                    <Typography variant="body1">
-                      <LocationOn sx={{ mr: 1, color: '#64748B', fontSize: 20 }} />
-                      {product.locationText}
-                    </Typography>
-                  )}
-                </Stack>
-              </Paper>
-            </Box>
+        {/* Contact Info */}
+<Box sx={{ mb: 3 }}>
+  <Typography variant="h6" gutterBottom fontWeight="bold">
+    {t("common.contactInfo")}
+  </Typography>
+  <Paper sx={{ p: 2, bgcolor: '#F8FAFC', borderRadius: 3 }}>
+    <Stack spacing={2}>
+      {product.phone && (
+        <Typography variant="body1">
+          <Phone sx={{ mr: 1, color: '#2e7d32', fontSize: 20 }} />
+          {product.phone}
+        </Typography>
+      )}
+      {product.whatsappPhone && (
+        <Typography variant="body1">
+          <WhatsApp sx={{ mr: 1, color: '#25D366', fontSize: 20 }} />
+          {product.whatsappPhone}
+        </Typography>
+      )}
+      {product.locationText && (
+        <Typography variant="body1">
+          <LocationOn sx={{ mr: 1, color: '#64748B', fontSize: 20 }} />
+          {product.locationText}
+        </Typography>
+      )}
+    </Stack>
+  </Paper>
+</Box>
 
-            {/* Contact Buttons */}
-            <Stack direction="row" spacing={2}>
-              {product.whatsappPhone && (
-                <Button
-                  variant="contained"
-                  startIcon={<WhatsApp />}
-                  onClick={handleWhatsApp}
-                  fullWidth
-                  sx={{
-                    bgcolor: '#25D366',
-                    '&:hover': { bgcolor: '#128C7E' },
-                    py: 1.5,
-                    borderRadius: 3
-                  }}
-                >
-                  {t("products.whatsapp")}
-                </Button>
-              )}
-              {product.phone && (
-                <Button
-                  variant="contained"
-                  startIcon={<Phone />}
-                  onClick={handleCallSeller}
-                  fullWidth
-                  sx={{
-                    bgcolor: '#02ff04',
-                    '&:hover': { bgcolor: '#15803D' },
-                    py: 1.5,
-                    borderRadius: 3
-                  }}
-                >
-                  {t("products.callSeller")}
-                </Button>
-              )}
-            </Stack>
+{/* WhatsApp Contact Button Only */}
+{product.whatsappPhone && (
+  <Stack direction="row">
+    <Button
+      variant="contained"
+      startIcon={<WhatsApp />}
+      onClick={handleWhatsApp}
+      fullWidth
+      sx={{
+        bgcolor: '#25D366',
+        '&:hover': { bgcolor: '#128C7E' },
+        py: 1.5,
+        borderRadius: 3
+      }}
+    >
+      {t("products.whatsapp")}
+    </Button>
+  </Stack>
+)}
+
             
           </Paper>
         </Grid>

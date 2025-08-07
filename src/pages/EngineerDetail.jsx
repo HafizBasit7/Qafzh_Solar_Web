@@ -83,7 +83,7 @@ const EngineerDetail = () => {
         display: 'flex', 
         alignItems: 'center', 
         mb: 3, 
-        bgcolor: '#02ff04',
+        bgcolor: '#2e7d32',
         p: 2,
         borderRadius: 2,
         color: 'white'
@@ -183,7 +183,7 @@ const EngineerDetail = () => {
             startIcon={<Phone />}
             onClick={() => window.location.href = `tel:${engineer.phone}`}
             sx={{
-              bgcolor: '#02ff04',
+              bgcolor: '#2e7d32',
               '&:hover': { bgcolor: '#15803D' },
               py: 1.5,
               borderRadius: 3
@@ -221,13 +221,13 @@ const EngineerDetail = () => {
             </Typography>
             <Stack spacing={2}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <LocationOn sx={{ color: '#02ff04' }} />
-                <Typography>
+                {/* <LocationOn sx={{ color: '#2e7d32' }} /> */}
+                {/* <Typography>
                   {engineer.address}, {engineer.city}, {engineer.governorate}
-                </Typography>
+                </Typography> */}
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Phone sx={{ color: '#02ff04' }} />
+                <Phone sx={{ color: '#2e7d32' }} />
                 <Typography>{engineer.phone}</Typography>
               </Box>
               {engineer.whatsappPhone && (
@@ -237,12 +237,12 @@ const EngineerDetail = () => {
                 </Box>
               )}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Email sx={{ color: '#02ff04' }} />
+                <Email sx={{ color: '#2e7d32' }} />
                 <Typography>{engineer.email}</Typography>
               </Box>
               {engineer.notes && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <NotesIcon sx={{ color: '#02ff04' }} />
+                  <NotesIcon sx={{ color: '#2e7d32' }} />
                   <Typography>{engineer.notes}</Typography>
                 </Box>
               )}
@@ -262,7 +262,7 @@ const EngineerDetail = () => {
                   key={index}
                   label={service}
                   sx={{
-                    bgcolor: '#02ff04',
+                    bgcolor: '#2e7d32',
                     color: '#DCFCE7',
                     border: '1px solid #DCFCE7'
                   }}
@@ -297,13 +297,13 @@ const EngineerDetail = () => {
             </Typography>
             <Stack spacing={2}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <Work sx={{ color: '#02ff04' }} />
+                <Work sx={{ color: '#2e7d32' }} />
                 <Typography>
                   {engineer.experience?.years || 0} {t("engineers.years")}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <DescriptionIcon sx={{ color: '#02ff04' }} />
+                <DescriptionIcon sx={{ color: '#2e7d32' }} />
                 <Typography>{engineer.experience?.description || t("engineers.noDescription")}</Typography>
               </Box>
             </Stack>
@@ -318,33 +318,33 @@ const EngineerDetail = () => {
             </Typography>
             <Stack spacing={2}>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <MonetizationOnIcon sx={{ color: '#02ff04' }} />
+                <MonetizationOnIcon sx={{ color: '#2e7d32' }} />
                 <Typography>
                   {t("common.hourlyRate")}: {engineer.pricing?.hourlyRate || 0} {engineer.pricing?.currency || 'USD'}
                 </Typography>
               </Box>
               {engineer.pricing?.minimumCharge && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <MonetizationOnIcon sx={{ color: '#02ff04' }} />
+                  <MonetizationOnIcon sx={{ color: '#2e7d32' }} />
                   <Typography>
                     {t("common.minimumCharge")}: {engineer.pricing.minimumCharge} {engineer.pricing.currency}
                   </Typography>
                 </Box>
               )}
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <ScheduleIcon sx={{ color: '#02ff04' }} />
+                <ScheduleIcon sx={{ color: '#2e7d32' }} />
                 <Typography>
                   {t("products.status")}: {engineer.availability?.status || t("engineers.unknown")}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <ScheduleIcon sx={{ color: '#02ff04' }} />
+                <ScheduleIcon sx={{ color: '#2e7d32' }} />
                 <Typography>
                   {t("common.workingHours")}: {workingHoursDisplay}
                 </Typography>
               </Box>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                <ScheduleIcon sx={{ color: '#02ff04' }} />
+                <ScheduleIcon sx={{ color: '#2e7d32' }} />
                 <Typography>
                   {t("common.workingDays")}: {workingDaysDisplay}
                 </Typography>
@@ -373,7 +373,7 @@ const EngineerDetail = () => {
                     >
                       <Stack spacing={1}>
                         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                          <SchoolIcon sx={{ color: '#02ff04' }} />
+                          <SchoolIcon sx={{ color: '#2e7d32' }} />
                           <Typography fontWeight="bold">{cert.name}</Typography>
                         </Box>
                         <Typography color="text.secondary">{cert.issuedBy}</Typography>

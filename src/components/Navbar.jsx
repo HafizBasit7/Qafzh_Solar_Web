@@ -40,6 +40,9 @@ import {
   Phone,
   Logout,
   Inventory,
+  Storefront,
+  LocalOffer,
+  Home
 } from "@mui/icons-material";
 import { useAuthContext } from "../contexts/AuthContext";
 import { useDialogContext } from "../contexts/DialogContext";
@@ -51,7 +54,7 @@ const Navbar = ({ language, onLanguageToggle }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
-  const { isAuthenticated, user, logout } = useAuthContext();
+  const { isAuthenticated, userData: user, logout } = useAuthContext();
   const { showSuccess } = useDialogContext();
   const [sellingFormOpen, setSellingFormOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -64,10 +67,10 @@ const Navbar = ({ language, onLanguageToggle }) => {
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
   const navItems = [
-    { text: t("nav.products"), path: "/products", icon: <Store /> },
+    { text: t("nav.home"), path: "/", icon: <Home /> },               // Arabic: "الرئيسية"
     { text: t("nav.engineers"), path: "/engineers", icon: <Engineering /> },
-    { text: t("nav.shops"), path: "/shops", icon: <Store /> },
-    { text: t("nav.shopAds"), path: "/shop-ads", icon: <Store /> },
+    { text: t("nav.shops"), path: "/shops", icon: <Storefront /> },  // Different from home
+    { text: t("nav.shopAds"), path: "/shop-ads", icon: <LocalOffer /> }, // Or <AdUnits />
     { text: t("nav.calculator"), path: "/calculator", icon: <Calculate /> },
   ];
 
@@ -162,7 +165,7 @@ const Navbar = ({ language, onLanguageToggle }) => {
       PaperProps={{
         sx: {
           width: 280,
-          backgroundColor: "#2e7d32",
+          backgroundColor: "#1877f2",
           color: "white",
         },
       }}
@@ -175,7 +178,7 @@ const Navbar = ({ language, onLanguageToggle }) => {
           </Typography>
         </Box>
 
-        <Divider sx={{ backgroundColor: "rgba(255,255,255,0.2)", mb: 2 }} />
+        <Divider sx={{ backgroundColor: "rgba(255, 255, 255, 0.9)", mb: 2 }} />
 
         <List>
           {navItems.map((item) => (
@@ -255,15 +258,15 @@ const Navbar = ({ language, onLanguageToggle }) => {
           startIcon={<Add />}
           onClick={handleStartSellingClick}
           sx={{
-            backgroundColor: "#ff6f00",
+            backgroundColor: "#2e7d32",
             color: "white",
             fontWeight: "bold",
             py: 1.5,
             borderRadius: 2,
-            boxShadow: "0 4px 8px rgba(255, 111, 0, 0.3)",
+            boxShadow: "0 4px 8px #2e7d32",
             "&:hover": {
-              backgroundColor: "#e65100",
-              boxShadow: "0 6px 12px rgba(255, 111, 0, 0.4)",
+              backgroundColor: "#2e7d32",
+              boxShadow: "0 6px 12px #2e7d32",
             },
             mb: 2,
           }}
@@ -319,7 +322,7 @@ const Navbar = ({ language, onLanguageToggle }) => {
 
   return (
     <>
-      <AppBar position="static" sx={{ backgroundColor: "#2e7d32" }}>
+      <AppBar position="static" sx={{ backgroundColor: "#1877f2" }}>
         <Toolbar
           sx={{
             maxWidth: "1400px",
@@ -350,15 +353,15 @@ const Navbar = ({ language, onLanguageToggle }) => {
                 startIcon={<Add />}
                 onClick={() => setSellingFormOpen(true)}
                 sx={{
-                  backgroundColor: "#ff6f00",
+                  backgroundColor: "#2e7d32",
                   color: "white",
                   fontWeight: "bold",
                   px: 3,
                   py: 1,
                   borderRadius: 2,
-                  boxShadow: "0 4px 8px rgba(255, 111, 0, 0.3)",
+                  boxShadow: "0 4px 8px #2e7d32",
                   "&:hover": {
-                    backgroundColor: "#e65100",
+                    backgroundColor: "#2e9d32",
                     boxShadow: "0 6px 12px rgba(255, 111, 0, 0.4)",
                     transform: "translateY(-1px)",
                   },
@@ -432,7 +435,7 @@ const Navbar = ({ language, onLanguageToggle }) => {
         </Toolbar>
       </AppBar>
 
-      {/* Profile Menu */}
+      {/* Enhanced Profile Menu */}
       <Menu
         anchorEl={profileAnchorEl}
         open={Boolean(profileAnchorEl)}
@@ -443,12 +446,7 @@ const Navbar = ({ language, onLanguageToggle }) => {
             overflow: "visible",
             filter: "drop-shadow(0px 2px 8px rgba(0,0,0,0.32))",
             mt: 1.5,
-            "& .MuiAvatar-root": {
-              width: 32,
-              height: 32,
-              ml: -0.5,
-              mr: 1,
-            },
+            minWidth: 280,
             "&:before": {
               content: '""',
               display: "block",
@@ -466,41 +464,199 @@ const Navbar = ({ language, onLanguageToggle }) => {
         transformOrigin={{ horizontal: "right", vertical: "top" }}
         anchorOrigin={{ horizontal: "right", vertical: "bottom" }}
       >
-        <Box sx={{ px: 2, py: 1 }}>
-          <Typography variant="subtitle1" fontWeight="bold">
-            {user?.name || user?.phone}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
-            {user?.phone}
-          </Typography>
-          {user?.isVerified && (
-            <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
-              <VerifiedUser fontSize="small" color="success" />
-              <Typography variant="caption" color="success.main" sx={{ ml: 0.5 }}>
-                Verified User
+        {/* Enhanced User Profile Header */}
+        <Box 
+          sx={{ 
+            px: 3, 
+            py: 2.5, 
+            borderBottom: "1px solid",
+            borderColor: "divider",
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+            minHeight: 80
+          }}
+        >
+          {/* Profile Image */}
+          <Box sx={{ position: "relative" }}>
+            {user?.profileImageUrl || user?.profileImage ? (
+              <Avatar
+                src={user?.profileImageUrl || user?.profileImage}
+                alt={user?.name || user?.phone || user?.phoneNumber}
+                sx={{ 
+                  width: 56, 
+                  height: 56,
+                  border: "2px solid",
+                  borderColor: "primary.main"
+                }}
+              />
+            ) : (
+              <Avatar
+                sx={{ 
+                  width: 56, 
+                  height: 56,
+                  bgcolor: "primary.main",
+                  border: "2px solid",
+                  borderColor: "primary.main",
+                  fontSize: "1.5rem",
+                  fontWeight: "bold"
+                }}
+              >
+                {user?.name ? user.name.charAt(0).toUpperCase() : 
+                 user?.phone ? user.phone.slice(-2) :
+                 user?.phoneNumber ? user.phoneNumber.slice(-2) : "U"}
+              </Avatar>
+            )}
+            {/* Verification Badge */}
+            {(user?.isVerified || user?.verified) && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  bottom: -2,
+                  right: -2,
+                  backgroundColor: "success.main",
+                  borderRadius: "50%",
+                  p: 0.3,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "2px solid white"
+                }}
+              >
+                <VerifiedUser 
+                  sx={{ 
+                    fontSize: 16, 
+                    color: "white" 
+                  }} 
+                />
+              </Box>
+            )}
+          </Box>
+
+          {/* User Information */}
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography 
+              variant="h6" 
+              fontWeight="bold" 
+              sx={{ 
+                mb: 0.5,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap"
+              }}
+            >
+              {user?.name || user?.fullName || user?.username || "User"}
+            </Typography>
+            
+            <Box sx={{ display: "flex", alignItems: "center", mb: 0.5 }}>
+              <Phone sx={{ fontSize: 14, mr: 0.5, color: "text.secondary" }} />
+              <Typography 
+                variant="body2" 
+                color="text.secondary"
+                sx={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap"
+                }}
+              >
+                {user?.phone || user?.phoneNumber || user?.mobile || "No phone available"}
               </Typography>
             </Box>
-          )}
+
+            {/* Debug Info - Remove this in production */}
+            {process.env.NODE_ENV === 'development' && (
+              <Typography variant="caption" color="text.disabled">
+                Debug: {JSON.stringify(Object.keys(user || {})).slice(0, 50)}...
+              </Typography>
+            )}
+
+            {(user?.isVerified || user?.verified) && (
+              <Box sx={{ display: "flex", alignItems: "center" }}>
+                <VerifiedUser 
+                  sx={{ 
+                    fontSize: 14, 
+                    mr: 0.5, 
+                    color: "success.main" 
+                  }} 
+                />
+                <Typography 
+                  variant="caption" 
+                  color="success.main" 
+                  fontWeight="medium"
+                >
+                  Verified User
+                </Typography>
+              </Box>
+            )}
+          </Box>
         </Box>
-        <Divider />
-        <MenuItem onClick={handleUpdateProfile}>
-          <ListItemIcon>
+
+        {/* Menu Items */}
+        <MenuItem 
+          onClick={handleUpdateProfile}
+          sx={{ 
+            py: 1.5, 
+            px: 3,
+            "&:hover": {
+              backgroundColor: "action.hover"
+            }
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>
             <Edit fontSize="small" />
           </ListItemIcon>
-          Update Profile
+          <ListItemText 
+            primary="Update Profile"
+            primaryTypographyProps={{
+              fontWeight: "medium"
+            }}
+          />
         </MenuItem>
-        <MenuItem onClick={handleMyProducts}>
-          <ListItemIcon>
+
+        <MenuItem 
+          onClick={handleMyProducts}
+          sx={{ 
+            py: 1.5, 
+            px: 3,
+            "&:hover": {
+              backgroundColor: "action.hover"
+            }
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>
             <Inventory fontSize="small" />
           </ListItemIcon>
-          My Products
+          <ListItemText 
+            primary="My Products"
+            primaryTypographyProps={{
+              fontWeight: "medium"
+            }}
+          />
         </MenuItem>
-        <Divider />
-        <MenuItem onClick={handleLogoutClick}>
-          <ListItemIcon>
-            <Logout fontSize="small" />
+
+        <Divider sx={{ mx: 2, my: 1 }} />
+
+        <MenuItem 
+          onClick={handleLogoutClick}
+          sx={{ 
+            py: 1.5, 
+            px: 3,
+            color: "error.main",
+            "&:hover": {
+              backgroundColor: "error.light",
+              color: "error.dark"
+            }
+          }}
+        >
+          <ListItemIcon sx={{ minWidth: 40 }}>
+            <Logout fontSize="small" color="inherit" />
           </ListItemIcon>
-          Logout
+          <ListItemText 
+            primary="Logout"
+            primaryTypographyProps={{
+              fontWeight: "medium"
+            }}
+          />
         </MenuItem>
       </Menu>
 

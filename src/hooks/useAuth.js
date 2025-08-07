@@ -240,6 +240,38 @@ const useAuth = () => {
     }
   }, [loginMutation]);
 
+  const updateProfileMutation = useMutation({
+    mutationFn: (data) => {
+      console.log('🔐 useAuth: Starting profile update...');
+      return authAPI.updateProfile(data);
+    },
+    onSuccess: async (response) => {
+      console.log('🔐 useAuth: Profile update successful');
+      // Update stored user data immediately  
+      if (response?.data?.user) {
+        await storage.setUserData(response.data.user);
+        
+        // Update query cache immediately with fresh data
+        queryClient.setQueryData(['user'], {
+          data: { user: response.data.user },
+          token: await storage.getToken()
+        });
+        
+        // Force invalidate and refetch to ensure all components update
+        queryClient.invalidateQueries(['user']);
+        
+        console.log('🔐 useAuth: Profile updated successfully:', response.data.user);
+      }
+      
+      showSuccess('تم التحديث', 'تم تحديث ملفك الشخصي بنجاح.');
+    },
+    onError: (error) => {
+      console.log('🔐 useAuth: Profile update failed:', error);
+      const errorMessage = error?.message || error?.data?.message || 'فشل في تحديث الملف الشخصي';
+      showError('فشل التحديث', errorMessage);
+    },
+  });
+
   return {
     isInitialized,
     isAuthenticated: checkAuthStatus(),
@@ -275,6 +307,8 @@ const useAuth = () => {
     profileLoading: profileQuery.isLoading,
     profileError: profileQuery.error,
     profileRefetch: profileQuery.refetch,
+    updateProfile: updateProfileMutation.mutate,
+    isUpdatingProfile: updateProfileMutation.isPending,
     
     // Utility
     checkAuthStatus,

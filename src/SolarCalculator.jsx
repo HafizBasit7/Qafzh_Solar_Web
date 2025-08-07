@@ -111,7 +111,7 @@ export default function SolarCalculator() {
       >
         {/* Calculator Header */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 3 }}>
-          <CalculateIcon sx={{ color: "#02ff04" }} />
+          <CalculateIcon sx={{ color: "#2e7d32" }} />
           <Typography
             variant="h5"
             sx={{
@@ -227,7 +227,7 @@ export default function SolarCalculator() {
             startIcon={<CalculateIcon />}
             sx={{
               mt: 3,
-              bgcolor: "#02ff04",
+              bgcolor: "#2e7d32",
               "&:hover": { bgcolor: "#15803D" },
               "&.Mui-disabled": { bgcolor: "#9CA3AF" },
               borderRadius: 3,
@@ -274,7 +274,7 @@ export default function SolarCalculator() {
               borderBottom: "1px solid #F3F4F6",
             }}
           >
-            <SolarPowerIcon sx={{ color: "#02ff04", fontSize: 28 }} />
+            <SolarPowerIcon sx={{ color: "#2e7d32", fontSize: 28 }} />
             <Typography
               variant="h5"
               sx={{ color: "#1F2937", fontWeight: 700 }}
@@ -299,7 +299,7 @@ export default function SolarCalculator() {
                     gap: 1.5,
                   }}
                 >
-                  <FlashOnIcon sx={{ color: "#02ff04" }} />
+                  <FlashOnIcon sx={{ color: "#2e7d32" }} />
                   <Box>
                     <Typography sx={{ color: "#6B7280", mb: 0.5 }}>
                       {t("calculator.totalDailyEnergy")}
@@ -322,7 +322,7 @@ export default function SolarCalculator() {
                     gap: 1.5,
                   }}
                 >
-                  <SpeedIcon sx={{ color: "#02ff04" }} />
+                  <SpeedIcon sx={{ color: "#2e7d32" }} />
                   <Box>
                     <Typography sx={{ color: "#6B7280", mb: 0.5 }}>
                       {t("calculator.peakLoad")}
@@ -345,7 +345,7 @@ export default function SolarCalculator() {
                     gap: 1.5,
                   }}
                 >
-                  <GridOnIcon sx={{ color: "#02ff04" }} />
+                  <GridOnIcon sx={{ color: "#2e7d32" }} />
                   <Box>
                     <Typography sx={{ color: "#6B7280", mb: 0.5 }}>
                       {t("calculator.solarPanels")}
@@ -371,7 +371,7 @@ export default function SolarCalculator() {
                     gap: 1.5,
                   }}
                 >
-                  <BatteryIcon sx={{ color: "#02ff04" }} />
+                  <BatteryIcon sx={{ color: "#2e7d32" }} />
                   <Box>
                     <Typography sx={{ color: "#6B7280", mb: 0.5 }}>
                       {t("calculator.batterySize")}
@@ -397,7 +397,7 @@ export default function SolarCalculator() {
                     gap: 1.5,
                   }}
                 >
-                  <PowerIcon sx={{ color: "#02ff04" }} />
+                  <PowerIcon sx={{ color: "#2e7d32" }} />
                   <Box>
                     <Typography sx={{ color: "#6B7280", mb: 0.5 }}>
                       {t("calculator.inverterSize")}
@@ -418,7 +418,7 @@ export default function SolarCalculator() {
               variant="contained"
               onClick={() => setShowResultsModal(false)}
               sx={{
-                bgcolor: "#02ff04",
+                bgcolor: "#2e7d32",
                 "&:hover": { bgcolor: "#15803D" },
                 borderRadius: 3,
                 py: 1.5,
