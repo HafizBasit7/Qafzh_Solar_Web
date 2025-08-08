@@ -69,6 +69,13 @@ const EngineerDetail = () => {
     );
   }
 
+  const currencyMap = {
+    usd: "USD ($)",
+    sar: "SAR (﷼)",
+    "yer-s": "Yemeni Rial - South (﷼)",
+    "yer-n": "Yemeni Rial - North (﷼)",
+  };
+  
   // Format working days for display
   const workingDaysDisplay = engineer.availability?.workingDays?.join("، ") || "غير متوفر";
   // Format working hours for display
@@ -320,17 +327,23 @@ const EngineerDetail = () => {
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <MonetizationOnIcon sx={{ color: '#2e7d32' }} />
                 <Typography>
-                  {t("common.hourlyRate")}: {engineer.pricing?.hourlyRate || 0} {engineer.pricing?.currency || 'USD'}
-                </Typography>
+  {t("common.hourlyRate")}:{" "}
+  {engineer.pricing?.hourlyRate || 0}{" "}
+  {currencyMap[engineer.pricing?.currency?.toLowerCase()] || engineer.pricing?.currency || "USD"}
+</Typography>
+
               </Box>
               {engineer.pricing?.minimumCharge && (
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <MonetizationOnIcon sx={{ color: '#2e7d32' }} />
-                  <Typography>
-                    {t("common.minimumCharge")}: {engineer.pricing.minimumCharge} {engineer.pricing.currency}
-                  </Typography>
-                </Box>
-              )}
+  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+    <MonetizationOnIcon sx={{ color: '#2e7d32' }} />
+    <Typography>
+      {t("common.minimumCharge")}:{" "}
+      {engineer.pricing.minimumCharge}{" "}
+      {currencyMap[engineer.pricing?.currency?.toLowerCase()] || engineer.pricing?.currency || "USD"}
+    </Typography>
+  </Box>
+)}
+
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <ScheduleIcon sx={{ color: '#2e7d32' }} />
                 <Typography>

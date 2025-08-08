@@ -202,6 +202,9 @@ const resources = {
     "common.currency": "اليمني",
     "common.userExists": "المستخدم موجود بالفعل",
     "common.userNotExists": "المستخدم غير موجود",
+    "common.save": "حفظ",
+    "common.saving": "جاري الحفظ...",
+    "common.back": "رجوع",
     "signup.otpSent": "تم إرسال رمز التحقق إلى رقم هاتفك",
         "signup.registrationSuccess": "تم إنشاء الحساب بنجاح",
         "signup.registrationError": "حدث خطأ في التسجيل",
@@ -212,6 +215,28 @@ const resources = {
         "register.registrationError": "Registration error",
         "register.registration": "Registration",
         "register.registrationError": "Registration error",
+
+
+        "profile.updateProfile": "Update Profile",
+    "profile.profilePicture": "Profile Picture",
+    "profile.imageUploadHint": "Click the camera icon to update your profile picture",
+    "profile.personalInfo": "Personal Information",
+    "profile.name": "Full Name",
+    "profile.phone": "Phone Number",
+    "profile.phoneChangeDisabled": "Phone number cannot be changed for security reasons",
+    "profile.nameRequired": "Name is required",
+    "profile.nameMinLength": "Name must be at least 2 characters",
+    "profile.nameMaxLength": "Name must be less than 50 characters",
+    "profile.invalidFileType": "Please select a valid image file (JPEG, PNG)",
+    "profile.fileSizeLimit": "Image size must be less than 5MB",
+    "profile.imageUpdated": "Profile image updated successfully",
+    "profile.imageUploadError": "Failed to upload image. Please try again.",
+    "profile.noChanges": "No changes to save",
+    "profile.updateSuccess": "Profile updated successfully",
+    "profile.updateSuccessDesc": "Your profile information has been updated",
+    "profile.updateError": "Failed to update profile. Please try again.",
+    "profile.saveChanges": "Save Changes",
+    "profile.noChangesToSave": "No Changes to Save",
         
 
 
@@ -262,7 +287,7 @@ const resources = {
       "selling.currency": "العملة",
       "selling.phoneNumber": "رقم الهاتف *",
       "selling.governorate": "المحافظة *",
-      "selling.city": "المدينة (اختياري)",
+      "selling.city": "المدينة",
       "selling.description": "الوصف *",
       "selling.images": "صور المنتج",
       "selling.uploadGallery": "رفع من المعرض",
@@ -290,7 +315,7 @@ const resources = {
       "selling.power": "القدرة",
       "selling.voltage": "الجهد",
       "selling.warranty": "الضمان",
-      "selling.negotiable": "السعر قابل للتفاوض",
+      "selling.negotiable": "قابل للتفاوض",
       "selling.enterCity": "أدخل مدينتك",
       "products.postedAt": "تم النشر في",
       "products.expiresAt": "تاريخ الانتهاء",
@@ -391,6 +416,26 @@ const resources = {
 
       "profile.myProducts": "منتجاتي",
       "profile.updateProfile": "تحديث التعديلات",
+      "updateProfile": "تحديث الملف الشخصي",
+    "profile.profilePicture": "صورة الملف الشخصي",
+    "profile.imageUploadHint": "انقر على أيقونة الكاميرا لتحديث صورتك الشخصية",
+    "profile.personalInfo": "المعلومات الشخصية",
+    "profile.name": "الاسم الكامل",
+    "profile.phone": "رقم الهاتف",
+    "profile.phoneChangeDisabled": "لا يمكن تغيير رقم الهاتف لأسباب أمنية",
+    "profile.nameRequired": "الاسم مطلوب",
+    "profile.nameMinLength": "يجب أن يكون الاسم على الأقل حرفين",
+    "profile.nameMaxLength": "يجب أن يكون الاسم أقل من 50 حرفًا",
+    "profile.invalidFileType": "الرجاء اختيار صورة صالحة (JPEG, PNG)",
+    "profile.fileSizeLimit": "يجب أن يكون حجم الصورة أقل من 5 ميجابايت",
+    "profile.imageUpdated": "تم تحديث الصورة الشخصية بنجاح",
+    "profile.imageUploadError": "فشل تحميل الصورة. يرجى المحاولة مرة أخرى.",
+    "profile.noChanges": "لا يوجد تغييرات للحفظ",
+    "profile.updateSuccess": "تم تحديث الملف الشخصي بنجاح",
+    "profile.updateSuccessDesc": "تم تحديث معلومات ملفك الشخصي",
+    "profile.updateError": "فشل تحديث الملف الشخصي. يرجى المحاولة مرة أخرى.",
+    "profile.saveChanges": "حفظ التغييرات",
+    "profile.noChangesToSave": "لا توجد تغييرات للحفظ",
 
 
 
@@ -647,6 +692,10 @@ const resources = {
     "common.friday": "Friday",
     "common.saturday": "Saturday",
     "common.currency": "Yemeni Rial",
+   
+    "common.save": "Save",
+    "common.saving": "Saving...",
+    "common.back": "Back",
 
 
       // Locations
@@ -712,7 +761,7 @@ const resources = {
       "selling.currency": "Currency",
       "selling.phoneNumber": "Phone Number *",
       "selling.governorate": "Location / Governorate *",
-      "selling.city": "City (Optional)",
+      "selling.city": "City",
       "selling.description": "Description *",
       "selling.images": "Product Images",
       "selling.uploadGallery": "Upload from Gallery",

@@ -581,6 +581,7 @@ export default function HomePage() {
   const renderProductCard = (product) => (
     <Card sx={{ 
       display: 'flex', 
+      flexDirection: { xs: 'column', sm: 'row' },
       mb: 2, 
       '&:hover': { 
         boxShadow: 4,
@@ -596,8 +597,8 @@ export default function HomePage() {
       <CardMedia
         component="img"
         sx={{ 
-          width: 200, 
-          height: 150,
+          width: { xs: '100%', sm: 150, md: 200 }, // Responsive width
+          height: { xs: 200, sm: 150 }, // Responsive height
           flexShrink: 0,
           objectFit: 'cover'
         }}
@@ -642,7 +643,7 @@ export default function HomePage() {
             variant="outlined"
           />
            {product.isNegotiable && (
-              <Chip label="قابل للتفاوض" size="small" color="info" variant="outlined" />
+              <Chip label={t("selling.negotiable")} size="small" color="info" variant="outlined" />
             )}
         </Box>
 

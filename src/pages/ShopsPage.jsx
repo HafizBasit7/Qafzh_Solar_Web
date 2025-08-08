@@ -98,7 +98,7 @@ const ShopsPage = () => {
       </Typography>
 
       {/* Filters Section */}
-      <Paper sx={{ p: 3, mb: 4 }}>
+      {/* <Paper sx={{ p: 3, mb: 4 }}>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <FilterList sx={{ mr: 1 }} />
           <Typography variant="h6">{t("shops.filters", "الفلاتر")}</Typography>
@@ -168,7 +168,7 @@ const ShopsPage = () => {
             </FormControl>
           </Grid>
         </Grid>
-      </Paper>
+      </Paper> */}
 
       {/* Loading State */}
       {isLoadingShops && (

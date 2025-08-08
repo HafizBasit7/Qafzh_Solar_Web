@@ -102,12 +102,98 @@ const SellingForm = ({ open, onClose }) => {
   }, [open, isAuthenticated, userData, checkAuthStatus]);
 
   // Yemeni governorates
+
+
   const governorates = [
-    "صنعاء", "عدن", "تعز", "الحديدة", "إب", "ذمار",
-    "المحويت", "ريمة", "الجوف", "مأرب", "البيضاء",
-    "شبوة", "حضرموت", "المهرة", "صعدة", "حجة",
-    "عمران", "لحج", "أبين", "الضالع",
+    {
+      name: "أبين",
+      cities: ["زنجبار", "خنفر", "لودر", "مودية", "سيبان", "أحور"]
+    },
+    {
+      name: "عدن",
+      cities: ["كريتر", "المعلا", "التواهي", "الشيخ عثمان", "المنصورة", "دار سعد", "البريقة", "خور مكسر"]
+    },
+    {
+      name: "البيضاء",
+      cities: ["البيضاء", "رداع", "مكيراس", "ناطع", "سباح", "ولد ربيع", "الصومعة", "الزاهر"]
+    },
+    {
+      name: "الضالع",
+      cities: ["الضالع", "دمت", "قعطبة", "الأزارق", "جحاف", "الحصين", "الشعيب", "جبن"]
+    },
+    {
+      name: "الحديدة",
+      cities: ["الحديدة", "باجل", "الخوخة", "اللُحية", "الصليف", "بيت الفقيه", "زبيد", "المنصورية", "التحيتا", "حيس", "المغلاف", "الجراحي", "كمران", "الدريهمي", "القناوص", "وادي مور", "الزيدية", "التحيتا", "الخوخة", "حرف سفيان", "الشمايتين", "المراوعة", "بُرع"]
+    },
+    {
+      name: "الجوف",
+      cities: ["الحزم", "خب والشعف", "برط العنان", "الخلق", "المطمة", "الغيل", "رجوزة", "الزاهر", "الحميدات", "خب والشعف", "المتون"]
+    },
+    {
+      name: "المهرة",
+      cities: ["الغيضة", "سيحوت", "قشن", "المسيلة", "حوف", "منعر", "شحن", "حَصوين", "فرطك"]
+    },
+    {
+      name: "المحويت",
+      cities: ["المحويت", "الخبت", "حفاش", "شبام كوكبان", "ملحان", "بني سعد", "الرجم", "الطويلة", "الرُجم"]
+    },
+  
+    {
+      name: "عمران",
+      cities: ["عمران", "ريدة", "حرف سفيان", "خارف", "القفلة", "السودة", "بني صريم", "مسور", "عيال سريح", "جبل عيال يزيد", "ثلاء", "حبور ظليمة", "السود", "المدان", "سوير", "شهيد ناجي", "ذي بين"]
+    },
+    {
+      name: "ذمار",
+      cities: ["ذمار", "عنس", "الحداء", "ميفعة عنس", "عتمة", "جهران", "دوران عنس", "مغرب عنس", "المنار", "وصاب السافل", "وصاب العالي", "جبل الشرق"]
+    },
+    {
+      name: "حضرموت",
+      cities: ["المكلا", "سيئون", "الشحر", "تريم", "شبام", "وادي حضرموت", "قطن", "يابوث", "حجر الصيعر", "دوعن", "الريدة", "القطن", "عمد", "رخية", "ثمود", "سيح الأر", "العبر", "مأرب الوادي", "حورة", "زمخ ومنوخ", "الوديعة", "غيل باوزير", "هجم", "مكيراس", "الريدة وقصيعر", "الديس", "رممة", "المكلا", "مكيراس", "القائمة", "السوم", "الروضة", "الثلوث", "التنعيم", "برهوت", "يشبم"]
+    },
+    {
+      name: "حجة",
+      cities: ["حجة", "عبس", "حرض", "ميدي", "مستباء", "أفلح اليمن", "قفل شمر", "نجرة", "بكيل المير", "الجميمة", "المفتاح", "الشغادرة", "وشحة", "كُحلان الشرف", "كعيدنة", "أفلح الشام", "بني قيس", "شهارة", "السلام", "أوبينة", "ريف حجة", "أسلم", "لاعة", "المغربة", "الشاهل", "كُشر"]
+    },
+    {
+      name: "إب",
+      cities: ["إب", "جبلة", "بعدان", "حبيش", "السياني", "المشنة", "السبرة", "مذيخرة", "القفر", "يافع", "النادرة", "ذي السفال", "العدين", "حزم العدين", "فرع العدين", "السدة", "الشاعر", "المخادر", "الرُضمة"]
+    },
+    {
+      name: "لحج",
+      cities: ["الحوطة", "تبن", "الحليمين", "ردفان", "يهر", "الوديعة", "القبيطة", "المضاربة ورأس العارة", "الملاح", "المقاطرة", "طور الباحة", "يافع", "الحد", "السعيد"]
+    },
+    {
+      name: "مأرب",
+      cities: ["مأرب", "صرواح", "رغوان", "ماهلية", "حريب", "الجوبة", "بدبدة", "رحبة", "حريب القراميش", "مجزر", "العبدية", "مدغل", "جبل مراد", "رحبة"]
+    },
+    {
+      name: "ريمة",
+      cities: ["الجبين", "بلاد الطعام", "كُسمة", "السلفية", "مُزهر", "السلفية"]
+    },
+    {
+      name: "صعدة",
+      cities: ["صعدة", "حيدان", "كتاف والبقع", "الظاهر", "رازح", "الحشوة", "مجزر", "سحار", "كتاف", "الصفراء", "شدا", "قطابر", "باقم", "منبه", "غمر", "ساقين", "البقع", "البقع"]
+    },
+    {
+      name: "صنعاء",
+      cities: ["سنحان", "خولان", "بني مطر", "الحصن", "جحانة", "همدان", "نهم", "بني حشيش", "مناخة", "همدان", "صعفان", "أرحب", "الطيال", "بلاد الروس", "الحيمة الخارجية", "بني ضبيان"]
+    },
+    {
+      name: "شبوة",
+      cities: ["عتق", "الروضة", "ميفعة", "نصاب", "مرخة السفلى", "مرخة العليا", "حطيب", "عسيلان", "رضوم", "جردان", "ضَهر", "بيحان", "عين", "السعيد", "عرمة", "الطلح", "حبّان"]
+    },
+    {
+      name: "سقطرى",
+      cities: ["حديبو", "مومي", "قلنسية", "عبد الكوري"]
+    },
+    {
+      name: "تعز",
+      cities: ["تعز", "التربة", "صبر الموادم", "الشمايتين", "دمنت خدير", "الوازعية", "شرعب الرونة", "شرعب السلام", "جبل حبشي", "المظفر", "القاهرة", "صالة", "مقبنة", "المسراخ", "موزع", "الصلو", "سامع", "المعافر", "المخا", "ذباب", "برة", "حيفان", "ماوية", "المواسط"]
+    }
   ];
+  
+
+  
   
   // Common solar product brands
 const commonBrands = [
@@ -622,45 +708,67 @@ const commonBrands = [
                 />
               </Grid>
 
-              {/* Governorate */}
-              <Grid item xs={12} md={6}>
-                <FormControl
-                  fullWidth
-                  error={!!errors.governorate}
-                  sx={{ minWidth: 140 }}
-                >
-                  <InputLabel>{t("selling.governorate")}</InputLabel>
-                  <Select
-                    value={formData.governorate}
-                    onChange={(e) =>
-                      handleInputChange("governorate", e.target.value)
-                    }
-                    label={t("selling.governorate")}
-                  >
-                    {governorates.map((gov) => (
-                      <MenuItem key={gov} value={gov}>
-                        {gov}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                  {errors.governorate && (
-                    <Typography color="error" variant="caption">
-                      {errors.governorate}
-                    </Typography>
-                  )}
-                </FormControl>
-              </Grid>
 
-              {/* City */}
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label={t("selling.city")}
-                  value={formData.city}
-                  onChange={(e) => handleInputChange("city", e.target.value)}
-                  placeholder={t("selling.enterCity")}
-                />
-              </Grid>
+{/* Governorate */}
+<Grid item xs={12} md={6}>
+  <FormControl
+    fullWidth
+    error={!!errors.governorate}
+    sx={{ minWidth: 140 }}
+  >
+    <InputLabel>{t("selling.governorate")}</InputLabel>
+    <Select
+      value={formData.governorate}
+      onChange={(e) => {
+        const selectedGov = e.target.value;
+        handleInputChange("governorate", selectedGov);
+        handleInputChange("city", ""); // reset city when governorate changes
+      }}
+      label={t("selling.governorate")}
+    >
+      {governorates.map((gov) => (
+        <MenuItem key={gov.name} value={gov.name}>
+          {gov.name}
+        </MenuItem>
+      ))}
+    </Select>
+    {errors.governorate && (
+      <Typography color="error" variant="caption">
+        {errors.governorate}
+      </Typography>
+    )}
+  </FormControl>
+</Grid>
+
+{/* City */}
+<Grid item xs={12} md={6}>
+  <FormControl
+    fullWidth
+    error={!!errors.city}
+    sx={{ minWidth: 140 }}
+    disabled={!formData.governorate} // disable until governorate is chosen
+  >
+    <InputLabel>{t("selling.city")}</InputLabel>
+    <Select
+      value={formData.city}
+      onChange={(e) => handleInputChange("city", e.target.value)}
+      label={t("selling.city")}
+    >
+      {(governorates.find(gov => gov.name === formData.governorate)?.cities || [])
+        .map((city) => (
+          <MenuItem key={city} value={city}>
+            {city}
+          </MenuItem>
+        ))}
+    </Select>
+    {errors.city && (
+      <Typography color="error" variant="caption">
+        {errors.city}
+      </Typography>
+    )}
+  </FormControl>
+</Grid>
+
 
               {/* Location Text */}
               <Grid item xs={12}>
