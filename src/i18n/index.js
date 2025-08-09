@@ -127,6 +127,7 @@ const resources = {
       "engineers.issued": "تاريخ الإصدار",
       "engineers.expires": "تاريخ الانتهاء",
       "engineers.portfolio": "أعمال سابقة",
+      "engineers.noDescription": "لا يوجد وصف متاح",
 
       // Shops
       "shops.title": "المحلات المعتمدة",
@@ -568,7 +569,7 @@ const resources = {
       "products.error": "Error loading products. Please try again.",
       "products.location": "Location",
       "products.negotiable": "Negotiable",
-      "products.noDescription": "No description available.",
+      "products.noDescription": "No description available",
       "products.specifications": "Specifications",
       "products.power": "Power",
       "products.voltage": "Voltage",
@@ -621,6 +622,7 @@ const resources = {
       "engineers.issued": "Issued",
       "engineers.expires": "Expires",
       "engineers.portfolio": "Portfolio",
+      "engineers.noDescription": "No description available.",
 
       // Shops
       "shops.title": "Verified Shops",
